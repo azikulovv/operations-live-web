@@ -37,7 +37,7 @@ async function handleSubmit() {
 
   try {
     await authStore.signIn(validation.data)
-    await navigateTo('/dashboard')
+    await navigateTo('/dashboard/guide')
   } catch (error) {
     console.error(error)
 
