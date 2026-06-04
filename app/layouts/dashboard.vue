@@ -4,15 +4,24 @@ import AppMobileNav from '~/components/layout/AppMobileNav.vue'
 import AppSidebar from '~/components/layout/AppSidebar.vue'
 
 const isMobileMenuOpen = ref(false)
+const isSidebarCollapsed = ref(true)
+
+function toggleSidebar() {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-slate-50 text-slate-950">
-    <div class="flex">
-      <AppSidebar />
+    <div class="flex min-h-screen">
+      <AppSidebar :collapsed="isSidebarCollapsed" />
 
       <div class="min-w-0 flex-1">
-        <AppHeader @open-menu="isMobileMenuOpen = true" />
+        <AppHeader
+          :sidebar-collapsed="isSidebarCollapsed"
+          @toggle-sidebar="toggleSidebar"
+          @open-menu="isMobileMenuOpen = true"
+        />
 
         <main class="px-5 py-6 lg:px-8">
           <slot />
