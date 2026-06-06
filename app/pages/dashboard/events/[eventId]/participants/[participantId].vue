@@ -40,6 +40,7 @@ const participant = computed(() => {
 
 const form = reactive({
   userBadge: '',
+  closed: false,
   tournament: 0,
   bar: 0,
   games: 0,
@@ -64,6 +65,7 @@ function syncForm(value: EventParticipant | null) {
   if (!value) return
 
   form.userBadge = value.userBadge == null ? '' : String(value.userBadge)
+  form.closed = Boolean(value.closed)
   form.tournament = value.payment?.tournament ?? 0
   form.bar = value.payment?.bar ?? 0
   form.games = value.payment?.games ?? 0
@@ -103,6 +105,7 @@ async function saveParticipant() {
 
   const body: UpdateEventParticipantPayload = {
     userBadge: form.userBadge === '' ? null : Number(form.userBadge),
+    closed: form.closed,
     payment: {
       tournament: Number(form.tournament) || 0,
       bar: Number(form.bar) || 0,
@@ -242,6 +245,21 @@ useHead({
             <p class="mt-1 truncate text-xs text-slate-500">{{ participant.user.email }}</p>
           </div>
         </div>
+
+        <label
+          class="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+        >
+          <span>
+            <span class="block text-sm font-semibold text-slate-950">Закрыт</span>
+            <span class="mt-1 block text-xs text-slate-500">Участник закрыт в рамках события.</span>
+          </span>
+
+          <input
+            v-model="form.closed"
+            type="checkbox"
+            class="size-5 rounded border-slate-300 text-slate-950 focus:ring-slate-200"
+          />
+        </label>
 
         <div class="grid gap-4 md:grid-cols-4">
           <label class="block">

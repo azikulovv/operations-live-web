@@ -9,8 +9,6 @@ export type HostessVisit = {
   id: string
   badge: number
   nickname: string
-  email: string
-  phone: string
   tournament: string
   source: VisitSource
   registeredAt: string
@@ -42,16 +40,6 @@ const columns: DataTableColumn[] = [
     label: 'Nickname',
     stickyLeft: '68px',
     width: '150px',
-  },
-  {
-    key: 'email',
-    label: 'Email',
-    width: '190px',
-  },
-  {
-    key: 'phone',
-    label: 'Телефон',
-    width: '130px',
   },
   {
     key: 'tournament',
@@ -182,18 +170,6 @@ function formatMoney(value: number) {
     <template #cell-nickname="{ row }">
       <div class="max-w-32 truncate font-medium text-slate-950">
         {{ (row as HostessVisit).nickname }}
-      </div>
-    </template>
-
-    <template #cell-email="{ row }">
-      <div class="max-w-44 truncate text-slate-600">
-        {{ (row as HostessVisit).email || '—' }}
-      </div>
-    </template>
-
-    <template #cell-phone="{ row }">
-      <div class="max-w-28 truncate text-slate-600">
-        {{ (row as HostessVisit).phone || '—' }}
       </div>
     </template>
 

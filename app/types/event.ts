@@ -11,6 +11,7 @@ export type ApiMaybeResponse<T> = ApiResponse<T> | T
 
 export type UpdateEventParticipantPayload = {
   userBadge?: number | null
+  closed?: boolean
   payment?: Partial<{
     tournament: number
     bar: number
@@ -76,6 +77,7 @@ export interface EventParticipant {
   tableNumber: number | null
   seatNumber: number | null
   user: ParticipantUser
+  closed: boolean
   payment?: EventParticipantPayment | null
 }
 

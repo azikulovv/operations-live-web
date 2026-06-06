@@ -87,7 +87,7 @@ const visits = computed<HostessVisit[]>(() => {
       (participant.payment?.bar ?? 0) +
       (participant.payment?.games ?? 0),
     paidAmount: participant.payment?.paid ?? 0,
-    isClosed: Boolean(participant.cancelledAt),
+    isClosed: Boolean(participant.closed),
     debtComment:
       participant.tableNumber && participant.seatNumber
         ? `Стол ${participant.tableNumber}, место ${participant.seatNumber}`
@@ -123,8 +123,6 @@ const filteredVisits = computed(() => {
   return visits.value.filter((visit) => {
     return (
       visit.nickname.toLowerCase().includes(query) ||
-      visit.email.toLowerCase().includes(query) ||
-      visit.phone.toLowerCase().includes(query) ||
       String(visit.badge).includes(query) ||
       visit.tournament.toLowerCase().includes(query)
     )
