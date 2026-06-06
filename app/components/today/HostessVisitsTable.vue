@@ -9,10 +9,14 @@ export type HostessVisit = {
   id: string
   badge: number
   nickname: string
+  email: string
+  phone: string
   tournament: string
   source: VisitSource
   registeredAt: string
   status: VisitStatus
+  tableNumber: number | null
+  seatNumber: number | null
   tournamentAmount: number
   barAmount: number
   dartsAmount: number
@@ -40,6 +44,16 @@ const columns: DataTableColumn[] = [
     width: '150px',
   },
   {
+    key: 'email',
+    label: 'Email',
+    width: '190px',
+  },
+  {
+    key: 'phone',
+    label: 'Телефон',
+    width: '130px',
+  },
+  {
     key: 'tournament',
     label: 'Турнир',
     width: '150px',
@@ -59,6 +73,18 @@ const columns: DataTableColumn[] = [
     key: 'status',
     label: 'Статус',
     width: '130px',
+  },
+  {
+    key: 'tableNumber',
+    label: 'Стол',
+    align: 'center',
+    width: '70px',
+  },
+  {
+    key: 'seatNumber',
+    label: 'Место',
+    align: 'center',
+    width: '80px',
   },
   {
     key: 'tournamentAmount',
@@ -153,6 +179,18 @@ function formatMoney(value: number) {
       </div>
     </template>
 
+    <template #cell-email="{ row }">
+      <div class="max-w-44 truncate text-slate-600">
+        {{ (row as HostessVisit).email || '—' }}
+      </div>
+    </template>
+
+    <template #cell-phone="{ row }">
+      <div class="max-w-28 truncate text-slate-600">
+        {{ (row as HostessVisit).phone || '—' }}
+      </div>
+    </template>
+
     <template #cell-tournament="{ row }">
       <div class="max-w-36 truncate text-slate-600">
         {{ (row as HostessVisit).tournament }}
@@ -173,6 +211,14 @@ function formatMoney(value: number) {
       >
         {{ getStatusLabel((row as HostessVisit).status) }}
       </span>
+    </template>
+
+    <template #cell-tableNumber="{ row }">
+      {{ (row as HostessVisit).tableNumber ?? '—' }}
+    </template>
+
+    <template #cell-seatNumber="{ row }">
+      {{ (row as HostessVisit).seatNumber ?? '—' }}
     </template>
 
     <template #cell-tournamentAmount="{ row }">

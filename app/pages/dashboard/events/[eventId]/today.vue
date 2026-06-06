@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HostessVisit } from '~/components/today/HostessVisitsTable.vue'
 import HostessVisitsTable from '~/components/today/HostessVisitsTable.vue'
-import type { EventParticipant } from '~/types/event'
+import type { EventItem, EventParticipant } from '~/types/event'
 
 definePageMeta({
   middleware: 'auth',
@@ -11,6 +11,9 @@ definePageMeta({
 const route = useRoute()
 
 const eventId = computed(() => String(route.params.eventId))
+const eventSocket = useEventSocket()
+let realtimeSocket: ReturnType<typeof eventSocket.connect> = null
+let stopParticipantsSocketWatch: (() => void) | null = null
 
 const { events, isLoading: isEventsLoading, error: eventsError, fetchEvents } = useEvents()
 
@@ -68,6 +71,8 @@ const visits = computed<HostessVisit[]>(() => {
     id: participant.id,
     badge: participant.position ?? index + 1,
     nickname: participant.user.username || participant.user.email,
+    email: participant.user.email,
+    phone: participant.user.phone ?? '',
     registeredAt: formatDateTime(participant.createdAt),
     tournament: eventTitle.value,
     source: 'app',
@@ -90,6 +95,26 @@ const visits = computed<HostessVisit[]>(() => {
   }))
 })
 
+function getPayloadData<T>(payload: T[] | { data?: T[] } | null | undefined) {
+  if (Array.isArray(payload)) return payload
+
+  return Array.isArray(payload?.data) ? payload.data : []
+}
+
+function handleActiveEventsUpdated(payload: { data?: EventItem[] } | EventItem[]) {
+  events.value = getPayloadData(payload)
+}
+
+function handleParticipantsUpdated(
+  payload: { eventId?: string; data?: EventParticipant[] } | EventParticipant[],
+) {
+  if (!Array.isArray(payload) && payload.eventId && payload.eventId !== participantEventId.value) {
+    return
+  }
+
+  participants.value = getPayloadData(payload)
+}
+
 const filteredVisits = computed(() => {
   const query = search.value.trim().toLowerCase()
 
@@ -98,6 +123,8 @@ const filteredVisits = computed(() => {
   return visits.value.filter((visit) => {
     return (
       visit.nickname.toLowerCase().includes(query) ||
+      visit.email.toLowerCase().includes(query) ||
+      visit.phone.toLowerCase().includes(query) ||
       String(visit.badge).includes(query) ||
       visit.tournament.toLowerCase().includes(query)
     )
@@ -108,6 +135,50 @@ async function refreshPage() {
   await fetchEvents()
   await fetchParticipants()
 }
+
+onMounted(() => {
+  const socket = eventSocket.connect()
+
+  if (!socket) return
+
+  realtimeSocket = socket
+  socket.on('events:active:updated', handleActiveEventsUpdated)
+  socket.on('events:participants:updated', handleParticipantsUpdated)
+  socket.emit('events:active:subscribe')
+
+  stopParticipantsSocketWatch = watch(
+    participantEventId,
+    (newEventId, oldEventId) => {
+      if (oldEventId) {
+        socket.emit('events:participants:unsubscribe', {
+          eventId: oldEventId,
+        })
+      }
+
+      if (newEventId) {
+        socket.emit('events:participants:subscribe', {
+          eventId: newEventId,
+        })
+      }
+    },
+    {
+      immediate: true,
+    },
+  )
+})
+
+onBeforeUnmount(() => {
+  stopParticipantsSocketWatch?.()
+
+  if (!realtimeSocket) return
+
+  realtimeSocket.emit('events:active:unsubscribe')
+  realtimeSocket.emit('events:participants:unsubscribe', {
+    eventId: participantEventId.value,
+  })
+  realtimeSocket.off('events:active:updated', handleActiveEventsUpdated)
+  realtimeSocket.off('events:participants:updated', handleParticipantsUpdated)
+})
 </script>
 
 <template>
