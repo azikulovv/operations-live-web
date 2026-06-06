@@ -7,6 +7,8 @@ export type ApiResponse<T> = {
   data: T
 }
 
+export type ApiMaybeResponse<T> = ApiResponse<T> | T
+
 export type OperationEvent = {
   id: string
   title: string
@@ -21,6 +23,7 @@ export type OperationEvent = {
 
 export type EventItem = {
   id: string
+  externalId?: string
   imageUrl: string
   imageHash: string
   title: string
@@ -31,17 +34,11 @@ export type EventItem = {
   gameType: string
   startsAt: string
   endsAt: string | null
-  reminderSent1h: boolean
-  reminderSent10m: boolean
   participantLimit: number
-  seatsPerTable: number
-  pointsForParticipation: number
   status: EventStatus
   createdAt: string
   updatedAt: string
-  _count: {
-    registrations: number
-  }
+  registrationCount: number
 }
 
 export interface ParticipantUser {
@@ -65,7 +62,19 @@ export interface EventParticipant {
   createdAt: string
   cancelledAt: string | null
   position: number | null
-  tableNumber: number
-  seatNumber: number
+  tableNumber: number | null
+  seatNumber: number | null
   user: ParticipantUser
+  payment?: EventParticipantPayment | null
+}
+
+export interface EventParticipantPayment {
+  id: string
+  participantId: string
+  tournament: number
+  bar: number
+  games: number
+  paid: number
+  createdAt: string
+  updatedAt: string
 }

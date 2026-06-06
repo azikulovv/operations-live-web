@@ -21,6 +21,12 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     return event.status === 'completed' ? 'completed' : 'active'
   }
 
+  const getResponseData = (response: EventItem[] | { data?: EventItem[] }) => {
+    if (Array.isArray(response)) return response
+
+    return Array.isArray(response.data) ? response.data : []
+  }
+
   const filterEvents = (search: Ref<string>, selectedStatus: Ref<EventFilterStatus>) => {
     return computed(() => {
       const query = search.value.trim().toLowerCase()
@@ -69,8 +75,9 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 
     try {
       const response = await api.getEvents()
-      events.value = response.data
+      events.value = getResponseData(response)
     } catch {
+      events.value = []
       error.value = 'Не удалось загрузить события. Попробуйте обновить страницу.'
     } finally {
       isLoading.value = false

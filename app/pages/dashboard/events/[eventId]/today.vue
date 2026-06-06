@@ -12,18 +12,23 @@ const route = useRoute()
 
 const eventId = computed(() => String(route.params.eventId))
 
-const { events, isLoading: isEventsLoading, error: eventsError } = useEvents()
+const { events, isLoading: isEventsLoading, error: eventsError, fetchEvents } = useEvents()
+
+const event = computed(() => {
+  return (
+    events.value.find((item) => item.id === eventId.value || item.externalId === eventId.value) ??
+    null
+  )
+})
+
+const participantEventId = computed(() => event.value?.externalId ?? eventId.value)
 
 const {
   participants,
   isLoading: isParticipantsLoading,
   error: participantsError,
   fetchParticipants,
-} = useEventParticipants(eventId)
-
-const event = computed(() => {
-  return events.value.find((item) => item.id === eventId.value) ?? null
-})
+} = useEventParticipants(participantEventId)
 
 useHead({
   title: computed(() => `${event.value?.title || 'Событие'} · Сегодня | Operations Live`),
@@ -67,13 +72,21 @@ const visits = computed<HostessVisit[]>(() => {
     tournament: eventTitle.value,
     source: 'app',
     status: getParticipantStatus(participant),
-    tournamentAmount: 0,
-    barAmount: 0,
-    dartsAmount: 0,
-    totalAmount: 0,
-    paidAmount: 0,
+    tableNumber: participant.tableNumber,
+    seatNumber: participant.seatNumber,
+    tournamentAmount: participant.payment?.tournament ?? 0,
+    barAmount: participant.payment?.bar ?? 0,
+    dartsAmount: participant.payment?.games ?? 0,
+    totalAmount:
+      (participant.payment?.tournament ?? 0) +
+      (participant.payment?.bar ?? 0) +
+      (participant.payment?.games ?? 0),
+    paidAmount: participant.payment?.paid ?? 0,
     isClosed: Boolean(participant.cancelledAt),
-    debtComment: '',
+    debtComment:
+      participant.tableNumber && participant.seatNumber
+        ? `Стол ${participant.tableNumber}, место ${participant.seatNumber}`
+        : '',
   }))
 })
 
@@ -92,7 +105,8 @@ const filteredVisits = computed(() => {
 })
 
 async function refreshPage() {
-  await Promise.all([fetchParticipants()])
+  await fetchEvents()
+  await fetchParticipants()
 }
 </script>
 
@@ -140,7 +154,7 @@ async function refreshPage() {
             <input
               v-model.trim="search"
               type="text"
-              placeholder="Поиск: Badge, Nickname, email, телефон"
+              placeholder="Поиск: Badge, Nickname"
               class="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-950 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
             />
           </div>

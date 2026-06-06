@@ -40,7 +40,7 @@ const tabs = computed<
 ])
 
 function openEvent(event: EventItem) {
-  return navigateTo(`/dashboard/events/${event.id}/today`)
+  return navigateTo(`/dashboard/events/${event.externalId ?? event.id}/today`)
 }
 </script>
 

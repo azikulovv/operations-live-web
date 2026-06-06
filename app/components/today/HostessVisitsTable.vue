@@ -30,14 +30,12 @@ const columns: DataTableColumn[] = [
   {
     key: 'badge',
     label: 'Badge',
-    sticky: true,
     stickyLeft: '0px',
     width: '68px',
   },
   {
     key: 'nickname',
     label: 'Nickname',
-    sticky: true,
     stickyLeft: '68px',
     width: '150px',
   },
@@ -138,7 +136,7 @@ function formatMoney(value: number) {
     :columns="columns"
     :rows="visits"
     row-key="id"
-    min-width="1180px"
+    min-width="1580px"
     empty-text="Игроки не найдены"
   >
     <template #cell-badge="{ row }">

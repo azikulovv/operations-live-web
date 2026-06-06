@@ -30,38 +30,8 @@ function getEventStatusClass(status: EventStatus) {
   return classes[status]
 }
 
-function formatDateTime(value: string) {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return value
-
-  return new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
-}
-
-function formatTime(value: string) {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return value
-
-  return new Intl.DateTimeFormat('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
-}
-
-function formatEndTime(value: string | null) {
-  return value ? `до ${formatTime(value)}` : 'Время окончания не указано'
-}
-
 function formatRegistrations(value: number) {
   const forms = new Intl.PluralRules('ru-RU').select(value)
-
   return forms === 'one' ? `${value} регистрация` : `${value} регистраций`
 }
 </script>
@@ -105,12 +75,12 @@ function formatRegistrations(value: number) {
           <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
             <span class="inline-flex items-center gap-1">
               <CalendarDays class="size-3.5" />
-              {{ formatDateTime(event.startsAt) }}
+              {{ event.startsAt }}
             </span>
 
             <span class="inline-flex items-center gap-1">
               <Clock class="size-3.5" />
-              {{ formatEndTime(event.endsAt) }}
+              {{ event.endsAt }}
             </span>
 
             <span class="inline-flex min-w-0 items-center gap-1">
@@ -126,7 +96,7 @@ function formatRegistrations(value: number) {
           <p class="text-[11px] text-slate-400">Регистрации</p>
           <p class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-slate-950">
             <Users class="size-3.5 lg:hidden" />
-            {{ formatRegistrations(event._count.registrations) }}
+            {{ formatRegistrations(event.registrationCount) }}
           </p>
         </div>
 
@@ -135,11 +105,6 @@ function formatRegistrations(value: number) {
           <p class="mt-1 text-xs font-semibold text-slate-950">
             {{ event.participantLimit }} игроков
           </p>
-        </div>
-
-        <div>
-          <p class="text-[11px] text-slate-400">Столы</p>
-          <p class="mt-1 text-xs font-semibold text-slate-950">{{ event.seatsPerTable }} мест</p>
         </div>
 
         <div>

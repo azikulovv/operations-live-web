@@ -8,6 +8,12 @@ export const useEventParticipants = (eventId: Ref<string>) => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+  const getResponseData = (response: EventParticipant[] | { data?: EventParticipant[] }) => {
+    if (Array.isArray(response)) return response
+
+    return Array.isArray(response.data) ? response.data : []
+  }
+
   const fetchParticipants = async () => {
     if (!eventId.value) {
       participants.value = []
@@ -19,7 +25,7 @@ export const useEventParticipants = (eventId: Ref<string>) => {
 
     try {
       const response = await api.getEventParticipants(eventId.value)
-      participants.value = response.data
+      participants.value = getResponseData(response)
     } catch {
       participants.value = []
       error.value = 'Не удалось загрузить игроков. Попробуйте обновить список.'
