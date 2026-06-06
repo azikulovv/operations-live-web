@@ -69,7 +69,7 @@ function getParticipantStatus(participant: EventParticipant): HostessVisit['stat
 const visits = computed<HostessVisit[]>(() => {
   return participants.value.map((participant, index) => ({
     id: participant.id,
-    badge: participant.position ?? index + 1,
+    badge: participant.userBadge ?? participant.position ?? index + 1,
     nickname: participant.user.username || participant.user.email,
     email: participant.user.email,
     phone: participant.user.phone ?? '',

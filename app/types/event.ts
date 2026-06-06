@@ -9,6 +9,16 @@ export type ApiResponse<T> = {
 
 export type ApiMaybeResponse<T> = ApiResponse<T> | T
 
+export type UpdateEventParticipantPayload = {
+  userBadge?: number | null
+  payment?: Partial<{
+    tournament: number
+    bar: number
+    games: number
+    paid: number
+  }>
+}
+
 export type OperationEvent = {
   id: string
   title: string
@@ -62,6 +72,7 @@ export interface EventParticipant {
   createdAt: string
   cancelledAt: string | null
   position: number | null
+  userBadge?: number | null
   tableNumber: number | null
   seatNumber: number | null
   user: ParticipantUser

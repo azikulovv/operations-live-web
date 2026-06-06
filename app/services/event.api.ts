@@ -1,4 +1,10 @@
-import type { ApiMaybeResponse, EventItem, EventParticipant } from '~/types/event'
+import type {
+  ApiMaybeResponse,
+  ApiResponse,
+  EventItem,
+  EventParticipant,
+  UpdateEventParticipantPayload,
+} from '~/types/event'
 
 export function useEventsApi() {
   const api = useApi()
@@ -18,8 +24,16 @@ export function useEventsApi() {
     })
   }
 
+  function updateEventParticipant(participantId: string, body: UpdateEventParticipantPayload) {
+    return api<ApiResponse<EventParticipant>>(`/events/participants/${participantId}`, {
+      method: 'PATCH',
+      body,
+    })
+  }
+
   return {
     getEvents,
     getEventParticipants,
+    updateEventParticipant,
   }
 }

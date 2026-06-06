@@ -131,6 +131,12 @@ const columns: DataTableColumn[] = [
     label: 'Комментарий',
     width: '220px',
   },
+  {
+    key: 'actions',
+    label: '',
+    align: 'right',
+    width: '110px',
+  },
 ]
 
 function getStatusLabel(status: VisitStatus) {
@@ -258,6 +264,15 @@ function formatMoney(value: number) {
       <div class="max-w-52 truncate text-slate-600">
         {{ (row as HostessVisit).debtComment || '—' }}
       </div>
+    </template>
+
+    <template #cell-actions="{ row }">
+      <NuxtLink
+        :to="`/dashboard/events/${$route.params.eventId}/participants/${(row as HostessVisit).id}`"
+        class="inline-flex h-8 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
+      >
+        Изменить
+      </NuxtLink>
     </template>
   </UiDataTable>
 </template>
