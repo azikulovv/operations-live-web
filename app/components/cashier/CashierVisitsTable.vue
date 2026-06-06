@@ -4,6 +4,7 @@ import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
 export type CashierVisit = {
   id: string
+  participantId: string
   badge: number
   nickname: string
   tournament: string
@@ -17,6 +18,14 @@ export type CashierVisit = {
 
 defineProps<{
   visits: CashierVisit[]
+  savingId?: string | null
+}>()
+
+const emit = defineEmits<{
+  save: [visit: CashierVisit]
+  'update-total': [visit: CashierVisit, value: number]
+  'update-comment': [visit: CashierVisit, value: string]
+  'update-paid': [visit: CashierVisit, value: number]
 }>()
 
 const columns: DataTableColumn[] = [
@@ -77,6 +86,12 @@ const columns: DataTableColumn[] = [
     label: 'Комментарий',
     width: '220px',
   },
+  {
+    key: 'actions',
+    label: '',
+    align: 'right',
+    width: '120px',
+  },
 ]
 
 function formatMoney(value: number) {
@@ -109,7 +124,7 @@ function getPaymentStatusClass(status: PaymentStatus) {
     :columns="columns"
     :rows="visits"
     row-key="id"
-    min-width="1040px"
+    min-width="1160px"
     empty-text="Записи не найдены"
   >
     <template #cell-badge="{ row }">
@@ -133,7 +148,19 @@ function getPaymentStatusClass(status: PaymentStatus) {
     </template>
 
     <template #cell-totalAmount="{ row }">
-      {{ formatMoney((row as CashierVisit).totalAmount) }}
+      <input
+        :value="(row as CashierVisit).totalAmount"
+        type="number"
+        min="0"
+        class="h-8 w-24 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @input="
+          emit(
+            'update-total',
+            row as CashierVisit,
+            Number(($event.target as HTMLInputElement).value),
+          )
+        "
+      />
     </template>
 
     <template #cell-discountAmount="{ row }">
@@ -151,7 +178,19 @@ function getPaymentStatusClass(status: PaymentStatus) {
     </template>
 
     <template #cell-paidAmount="{ row }">
-      {{ formatMoney((row as CashierVisit).paidAmount) }}
+      <input
+        :value="(row as CashierVisit).paidAmount"
+        type="number"
+        min="0"
+        class="h-8 w-24 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @input="
+          emit(
+            'update-paid',
+            row as CashierVisit,
+            Number(($event.target as HTMLInputElement).value),
+          )
+        "
+      />
     </template>
 
     <template #cell-paymentStatus="{ row }">
@@ -164,9 +203,26 @@ function getPaymentStatusClass(status: PaymentStatus) {
     </template>
 
     <template #cell-comment="{ row }">
-      <div class="max-w-52 truncate text-slate-600">
-        {{ (row as CashierVisit).comment || '—' }}
-      </div>
+      <input
+        :value="(row as CashierVisit).comment"
+        type="text"
+        class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        placeholder="Комментарий"
+        @input="
+          emit('update-comment', row as CashierVisit, ($event.target as HTMLInputElement).value)
+        "
+      />
+    </template>
+
+    <template #cell-actions="{ row }">
+      <button
+        type="button"
+        class="h-8 rounded-lg bg-slate-950 px-3 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        :disabled="savingId === (row as CashierVisit).participantId"
+        @click="emit('save', row as CashierVisit)"
+      >
+        {{ savingId === (row as CashierVisit).participantId ? '...' : 'Сохранить' }}
+      </button>
     </template>
   </UiDataTable>
 </template>

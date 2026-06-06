@@ -12,7 +12,7 @@ export const useEventSocket = () => {
   const config = useRuntimeConfig()
   const token = useCookie<string | null>('access_token')
 
-  const connect = () => {
+  function connect() {
     if (!import.meta.client) return null
 
     if (!socket) {

@@ -16,7 +16,7 @@ useHead({
 const selectedStatus = ref<EventFilterStatus>('active')
 const search = ref('')
 
-const { filteredEvents, statusCounts, isLoading, error, fetchEvents } = useEvents({
+const { events, filteredEvents, statusCounts, isLoading, error, fetchEvents } = useEvents({
   filters: {
     search,
     status: selectedStatus,
@@ -33,11 +33,20 @@ const tabs = computed<
     label: `Активные ${statusCounts.value.active}`,
     value: 'active',
   },
-  // {
-  //   label: `Прошедшие ${statusCounts.value.completed}`,
-  //   value: 'completed',
-  // },
+  {
+    label: `Прошедшие ${statusCounts.value.completed}`,
+    value: 'completed',
+  },
 ])
+
+const eventsCountText = computed(() => {
+  const count = events.value.length
+
+  if (count === 1) return '1 событие'
+  if (count > 1 && count < 5) return `${count} события`
+
+  return `${count} событий`
+})
 
 function openEvent(event: EventItem) {
   return navigateTo(`/dashboard/events/${event.externalId ?? event.id}/today`)
@@ -61,29 +70,31 @@ function openEvent(event: EventItem) {
         />
 
         <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-          Активные и прошедшие события
+          События
         </h2>
 
         <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Выберите событие, чтобы открыть рабочие экраны: хостес, касса, promotions, бар и турнир.
+          Выберите событие, чтобы открыть рабочие экраны хостес, кассы и promotions.
         </p>
       </div>
-
-      <!-- В будущем добавим сюда кнопку для создания события -->
-      <!-- <button
-        type="button"
-        class="h-9 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800"
-      >
-        Создать событие
-      </button> -->
     </div>
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <UiTabs v-model="selectedStatus" :items="tabs" />
+        <div>
+          <h3 class="text-sm font-semibold tracking-tight text-slate-950">Список событий</h3>
 
-        <div class="w-full md:w-72">
-          <UiSearchInput v-model="search" placeholder="Поиск: название, город или дата" />
+          <p class="mt-1 text-xs text-slate-500">
+            Загружено {{ eventsCountText }} из API.
+          </p>
+        </div>
+
+        <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+          <UiTabs v-model="selectedStatus" :items="tabs" />
+
+          <div class="w-full md:w-80">
+            <UiSearchInput v-model="search" placeholder="Поиск: название, город или адрес" />
+          </div>
         </div>
       </div>
 

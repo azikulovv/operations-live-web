@@ -1,5 +1,5 @@
 export type EventFilterStatus = 'active' | 'completed'
-export type EventStatus = EventFilterStatus | 'published'
+export type EventStatus = EventFilterStatus | 'cancelled' | 'draft' | 'published'
 
 export type OperationEventStatus = EventFilterStatus
 
@@ -20,6 +20,15 @@ export type UpdateEventParticipantPayload = {
   }>
 }
 
+export type UpdateEventPaymentPayload = Partial<{
+  accruedAmount: number
+  discountAmount: number
+  toPayAmount: number
+  paidAmount: number
+  status: EventPaymentStatus
+  comment: string | null
+}>
+
 export type OperationEvent = {
   id: string
   title: string
@@ -34,28 +43,31 @@ export type OperationEvent = {
 
 export type EventItem = {
   id: string
-  externalId?: string
-  imageUrl: string
-  imageHash: string
+  externalId?: string | null
+  imageUrl?: string | null
+  imageHash?: string | null
   title: string
   city: string
   address: string
-  features: string
-  gameRules: string
+  features?: string | null
+  gameRules?: string | null
   gameType: string
   startsAt: string
   endsAt: string | null
   participantLimit: number
+  seatsPerTable?: number | null
+  tableCount?: number | null
   status: EventStatus
   createdAt: string
   updatedAt: string
-  registrationCount: number
+  registrationCount?: number
+  registrationsCount?: number
 }
 
 export interface ParticipantUser {
   id: string
-  avatarUrl: string
-  avatarHash: string
+  avatarUrl?: string | null
+  avatarHash?: string | null
   email: string
   phone?: string | null
   telegramId?: string | null
@@ -90,4 +102,78 @@ export interface EventParticipantPayment {
   paid: number
   createdAt: string
   updatedAt: string
+}
+
+export type EventPromotionType =
+  | 'CERTIFICATE'
+  | 'DEALER'
+  | 'DISCOUNT'
+  | 'FIFTH_VISIT'
+  | 'FREE_ENTRY'
+  | 'LADIES_DAY'
+  | 'VIP'
+
+export type EventPromotionUser = {
+  name: string
+  email: string
+  phone?: string | null
+  telegramId?: string | null
+  avatarUrl?: string | null
+  badge?: number | null
+}
+
+export type EventPromotionDetails = {
+  id: string
+  promotionType: EventPromotionType | string
+  reason: string | null
+  discountPercent: number
+  used: number
+  comment: string | null
+  updatedAt: string
+}
+
+export type EventPromotion = {
+  participantId: string
+  externalParticipantId: string
+  externalUserId: string
+  status: string
+  tableNumber: number | null
+  seatNumber: number | null
+  position: number | null
+  user: EventPromotionUser
+  promotion: EventPromotionDetails | null
+}
+
+export type EventPaymentStatus = 'PAID' | 'PARTIALLY_PAID' | 'UNPAID'
+
+export type EventPaymentUser = {
+  name: string
+  email: string
+  phone?: string | null
+  telegramId?: string | null
+  avatarUrl?: string | null
+  badge?: number | null
+}
+
+export type EventPaymentDetails = {
+  id: string
+  accruedAmount: number
+  discountAmount: number
+  toPayAmount: number
+  paidAmount: number
+  status: EventPaymentStatus | string
+  comment: string | null
+  updatedAt: string
+}
+
+export type EventPayment = {
+  participantId: string
+  externalParticipantId: string
+  externalUserId: string
+  participantStatus: string
+  tableNumber: number | null
+  seatNumber: number | null
+  position: number | null
+  user: EventPaymentUser
+  payment: EventPaymentDetails | null
 }

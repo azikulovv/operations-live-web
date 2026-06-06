@@ -2,7 +2,10 @@ import type {
   ApiMaybeResponse,
   ApiResponse,
   EventItem,
+  EventPayment,
   EventParticipant,
+  EventPromotion,
+  UpdateEventPaymentPayload,
   UpdateEventParticipantPayload,
 } from '~/types/event'
 
@@ -10,7 +13,7 @@ export function useEventsApi() {
   const api = useApi()
 
   function getEvents() {
-    return api<ApiMaybeResponse<EventItem[]>>('/events/active', {
+    return api<ApiMaybeResponse<EventItem[]>>('/events', {
       method: 'GET',
     })
   }
@@ -24,6 +27,25 @@ export function useEventsApi() {
     })
   }
 
+  function getEventPromotions(eventId: string) {
+    return api<ApiMaybeResponse<EventPromotion[]>>(`/events/${eventId}/promotions`, {
+      method: 'GET',
+    })
+  }
+
+  function getEventPayments(eventId: string) {
+    return api<ApiMaybeResponse<EventPayment[]>>(`/events/${eventId}/payments`, {
+      method: 'GET',
+    })
+  }
+
+  function updateEventPayment(participantId: string, body: UpdateEventPaymentPayload) {
+    return api<ApiResponse<EventPayment>>(`/payments/${participantId}`, {
+      method: 'PATCH',
+      body,
+    })
+  }
+
   function updateEventParticipant(participantId: string, body: UpdateEventParticipantPayload) {
     return api<ApiResponse<EventParticipant>>(`/events/participants/${participantId}`, {
       method: 'PATCH',
@@ -33,7 +55,10 @@ export function useEventsApi() {
 
   return {
     getEvents,
+    getEventPayments,
     getEventParticipants,
+    getEventPromotions,
+    updateEventPayment,
     updateEventParticipant,
   }
 }

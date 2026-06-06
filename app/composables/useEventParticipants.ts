@@ -1,5 +1,5 @@
-import { useEventsApi } from '~/services/event.api'
 import type { Ref } from 'vue'
+import { useEventsApi } from '~/services/event.api'
 import type { EventParticipant } from '~/types/event'
 
 export const useEventParticipants = (eventId: Ref<string>) => {
@@ -8,13 +8,7 @@ export const useEventParticipants = (eventId: Ref<string>) => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  const getResponseData = (response: EventParticipant[] | { data?: EventParticipant[] }) => {
-    if (Array.isArray(response)) return response
-
-    return Array.isArray(response.data) ? response.data : []
-  }
-
-  const fetchParticipants = async () => {
+  async function fetchParticipants() {
     if (!eventId.value) {
       participants.value = []
       return
@@ -25,7 +19,7 @@ export const useEventParticipants = (eventId: Ref<string>) => {
 
     try {
       const response = await api.getEventParticipants(eventId.value)
-      participants.value = getResponseData(response)
+      participants.value = getApiData(response)
     } catch {
       participants.value = []
       error.value = 'Не удалось загрузить игроков. Попробуйте обновить список.'

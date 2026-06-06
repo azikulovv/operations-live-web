@@ -1,5 +1,5 @@
-import { useEventsApi } from '~/services/event.api'
 import type { Ref } from 'vue'
+import { useEventsApi } from '~/services/event.api'
 import type { EventFilterStatus, EventItem } from '~/types/event'
 
 type UseEventsOptions = {
@@ -9,23 +9,19 @@ type UseEventsOptions = {
   }
 }
 
+function normalize(value: null | number | string | undefined) {
+  return value == null ? '' : String(value).toLowerCase()
+}
+
+function getFilterStatus(event: EventItem): EventFilterStatus {
+  return event.status === 'completed' ? 'completed' : 'active'
+}
+
 export const useEvents = (options: UseEventsOptions = {}) => {
   const api = useEventsApi()
   const events = ref<EventItem[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-
-  const normalize = (value: string | null | undefined) => value?.toLowerCase() ?? ''
-
-  const getFilterStatus = (event: EventItem): EventFilterStatus => {
-    return event.status === 'completed' ? 'completed' : 'active'
-  }
-
-  const getResponseData = (response: EventItem[] | { data?: EventItem[] }) => {
-    if (Array.isArray(response)) return response
-
-    return Array.isArray(response.data) ? response.data : []
-  }
 
   const filterEvents = (search: Ref<string>, selectedStatus: Ref<EventFilterStatus>) => {
     return computed(() => {
@@ -33,7 +29,6 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 
       return events.value.filter((event) => {
         const matchesStatus = getFilterStatus(event) === selectedStatus.value
-
         const searchableText = [
           event.title,
           event.city,
@@ -69,13 +64,13 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     )
   })
 
-  const fetchEvents = async () => {
+  async function fetchEvents() {
     isLoading.value = true
     error.value = null
 
     try {
       const response = await api.getEvents()
-      events.value = getResponseData(response)
+      events.value = getApiData(response)
     } catch {
       events.value = []
       error.value = 'Не удалось загрузить события. Попробуйте обновить страницу.'
@@ -84,9 +79,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     }
   }
 
-  onMounted(async () => {
-    await fetchEvents()
-  })
+  onMounted(fetchEvents)
 
   return {
     events,

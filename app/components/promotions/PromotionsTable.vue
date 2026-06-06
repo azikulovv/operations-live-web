@@ -1,26 +1,9 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
-
-export type PromotionType =
-  | 'free_entry'
-  | 'discount'
-  | 'certificate'
-  | 'dealer'
-  | 'fifth_visit'
-  | 'ladies_day'
-
-export type Promotion = {
-  id: string
-  nickname: string
-  type: PromotionType
-  reason: string
-  discountPercent: number
-  used: boolean
-  comment: string
-}
+import type { EventPromotion, EventPromotionType } from '~/types/event'
 
 type Props = {
-  promotions: Promotion[]
+  promotions: EventPromotion[]
 }
 
 defineProps<Props>()
@@ -29,25 +12,24 @@ const columns: DataTableColumn[] = [
   {
     key: 'nickname',
     label: 'Nickname',
-    sticky: true,
     stickyLeft: '0px',
     width: '180px',
   },
   {
     key: 'type',
     label: 'Promotion Type',
-    width: '180px',
+    width: '120px',
   },
   {
     key: 'reason',
     label: 'Reason',
-    width: '260px',
+    width: '120px',
   },
   {
     key: 'discountPercent',
     label: 'Discount %',
     align: 'right',
-    width: '120px',
+    width: '80px',
     cellClass: 'font-semibold tabular-nums text-slate-950',
   },
   {
@@ -62,30 +44,44 @@ const columns: DataTableColumn[] = [
   },
 ]
 
-function getPromotionTypeLabel(type: PromotionType) {
-  const labels: Record<PromotionType, string> = {
-    free_entry: 'Free Entry',
-    discount: 'Discount',
-    certificate: 'Certificate',
-    dealer: 'Dealer',
-    fifth_visit: '5th Visit',
-    ladies_day: 'Ladies Day',
+function getPromotionTypeLabel(type: EventPromotionType | string | undefined) {
+  if (!type) return 'Не задано'
+
+  const labels: Record<EventPromotionType, string> = {
+    CERTIFICATE: 'Сертификат',
+    DEALER: 'Дилер',
+    DISCOUNT: 'Скидка',
+    FIFTH_VISIT: '5-й визит',
+    FREE_ENTRY: 'Free Entry',
+    LADIES_DAY: 'Ladies Day',
+    VIP: 'VIP',
   }
 
-  return labels[type]
+  return type in labels ? labels[type as EventPromotionType] : type
 }
 
-function getPromotionTypeClass(type: PromotionType) {
-  const classes: Record<PromotionType, string> = {
-    free_entry: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-    discount: 'bg-sky-50 text-sky-700 ring-sky-100',
-    certificate: 'bg-violet-50 text-violet-700 ring-violet-100',
-    dealer: 'bg-amber-50 text-amber-700 ring-amber-100',
-    fifth_visit: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
-    ladies_day: 'bg-rose-50 text-rose-700 ring-rose-100',
+function getPromotionTypeClass(type: EventPromotionType | string | undefined) {
+  const classes: Record<EventPromotionType, string> = {
+    CERTIFICATE: 'bg-violet-50 text-violet-700 ring-violet-100',
+    DEALER: 'bg-amber-50 text-amber-700 ring-amber-100',
+    DISCOUNT: 'bg-sky-50 text-sky-700 ring-sky-100',
+    FIFTH_VISIT: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+    FREE_ENTRY: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    LADIES_DAY: 'bg-rose-50 text-rose-700 ring-rose-100',
+    VIP: 'bg-slate-950 text-white ring-slate-950',
   }
 
-  return classes[type]
+  if (!type || !(type in classes)) return 'bg-slate-50 text-slate-600 ring-slate-200'
+
+  return classes[type as EventPromotionType]
+}
+
+function getPlayerName(promotion: EventPromotion) {
+  return promotion.user.name || promotion.user.email
+}
+
+function isPromotionUsed(promotion: EventPromotion) {
+  return promotion.promotion?.used
 }
 </script>
 
@@ -93,49 +89,51 @@ function getPromotionTypeClass(type: PromotionType) {
   <UiDataTable
     :columns="columns"
     :rows="promotions"
-    row-key="id"
+    row-key="participantId"
     min-width="1050px"
     empty-text="Акции не найдены"
   >
     <template #cell-nickname="{ row }">
       <div class="max-w-40 truncate font-medium text-slate-950">
-        {{ (row as Promotion).nickname }}
+        {{ getPlayerName(row as EventPromotion) }}
       </div>
     </template>
 
     <template #cell-type="{ row }">
       <span
         class="inline-flex h-6 items-center rounded-full px-2 text-[11px] font-medium ring-1"
-        :class="getPromotionTypeClass((row as Promotion).type)"
+        :class="getPromotionTypeClass((row as EventPromotion).promotion?.promotionType)"
       >
-        {{ getPromotionTypeLabel((row as Promotion).type) }}
+        {{ getPromotionTypeLabel((row as EventPromotion).promotion?.promotionType) }}
       </span>
+    </template>
+
+    <template #cell-discountPercent="{ row }">
+      {{ (row as EventPromotion).promotion?.discountPercent ?? 0 }}%
     </template>
 
     <template #cell-reason="{ row }">
       <div class="max-w-64 truncate text-slate-600">
-        {{ (row as Promotion).reason || '—' }}
+        {{ (row as EventPromotion).promotion?.reason || '—' }}
       </div>
     </template>
-
-    <template #cell-discountPercent="{ row }"> {{ (row as Promotion).discountPercent }}% </template>
 
     <template #cell-used="{ row }">
       <span
         class="inline-flex h-6 items-center rounded-full px-2 text-[11px] font-medium ring-1"
         :class="
-          (row as Promotion).used
+          isPromotionUsed(row as EventPromotion)
             ? 'bg-slate-50 text-slate-500 ring-slate-200'
             : 'bg-emerald-50 text-emerald-700 ring-emerald-100'
         "
       >
-        {{ (row as Promotion).used ? 'Да' : 'Нет' }}
+        {{ isPromotionUsed(row as EventPromotion) }}
       </span>
     </template>
 
     <template #cell-comment="{ row }">
       <div class="max-w-64 truncate text-slate-600">
-        {{ (row as Promotion).comment || '—' }}
+        {{ (row as EventPromotion).promotion?.comment || '—' }}
       </div>
     </template>
   </UiDataTable>

@@ -2,7 +2,7 @@
 import { CalendarDays, Clock, MapPin, Trophy, Users } from 'lucide-vue-next'
 import type { EventItem, EventStatus } from '~/types/event'
 
-defineProps<{
+const props = defineProps<{
   event: EventItem
 }>()
 
@@ -13,8 +13,10 @@ const emit = defineEmits<{
 function getEventStatusLabel(status: EventStatus) {
   const labels: Record<EventStatus, string> = {
     active: 'Активное',
-    published: 'Активное',
+    cancelled: 'Отменено',
     completed: 'Прошедшее',
+    draft: 'Черновик',
+    published: 'Опубликовано',
   }
 
   return labels[status]
@@ -23,17 +25,54 @@ function getEventStatusLabel(status: EventStatus) {
 function getEventStatusClass(status: EventStatus) {
   const classes: Record<EventStatus, string> = {
     active: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-    published: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    cancelled: 'bg-red-50 text-red-700 ring-red-100',
     completed: 'bg-slate-50 text-slate-500 ring-slate-200',
+    draft: 'bg-amber-50 text-amber-700 ring-amber-100',
+    published: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
   }
 
   return classes[status]
 }
 
-function formatRegistrations(value: number) {
-  const forms = new Intl.PluralRules('ru-RU').select(value)
-  return forms === 'one' ? `${value} регистрация` : `${value} регистраций`
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return 'Не указано'
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return value
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
 }
+
+const registrationsCount = computed(() => {
+  return props.event.registrationCount ?? props.event.registrationsCount ?? 0
+})
+
+function formatRegistrations(value: number) {
+  const form = new Intl.PluralRules('ru-RU').select(value)
+
+  if (form === 'one') return `${value} регистрация`
+  if (form === 'few') return `${value} регистрации`
+
+  return `${value} регистраций`
+}
+
+const tableInfo = computed(() => {
+  const tableCount = props.event.tableCount ?? 0
+  const seatsPerTable = props.event.seatsPerTable ?? 0
+
+  if (!tableCount && !seatsPerTable) return 'Не задано'
+  if (!tableCount) return `${seatsPerTable} мест/стол`
+  if (!seatsPerTable) return `${tableCount} столов`
+
+  return `${tableCount} x ${seatsPerTable}`
+})
 </script>
 
 <template>
@@ -75,12 +114,12 @@ function formatRegistrations(value: number) {
           <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
             <span class="inline-flex items-center gap-1">
               <CalendarDays class="size-3.5" />
-              {{ event.startsAt }}
+              {{ formatDateTime(event.startsAt) }}
             </span>
 
             <span class="inline-flex items-center gap-1">
               <Clock class="size-3.5" />
-              {{ event.endsAt }}
+              {{ formatDateTime(event.endsAt) }}
             </span>
 
             <span class="inline-flex min-w-0 items-center gap-1">
@@ -96,7 +135,7 @@ function formatRegistrations(value: number) {
           <p class="text-[11px] text-slate-400">Регистрации</p>
           <p class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-slate-950">
             <Users class="size-3.5 lg:hidden" />
-            {{ formatRegistrations(event.registrationCount) }}
+            {{ formatRegistrations(registrationsCount) }}
           </p>
         </div>
 
@@ -111,6 +150,13 @@ function formatRegistrations(value: number) {
           <p class="text-[11px] text-slate-400">Формат</p>
           <p class="mt-1 truncate text-xs font-semibold text-slate-950">
             {{ event.gameType }}
+          </p>
+        </div>
+
+        <div>
+          <p class="text-[11px] text-slate-400">Столы</p>
+          <p class="mt-1 truncate text-xs font-semibold text-slate-950">
+            {{ tableInfo }}
           </p>
         </div>
       </div>
