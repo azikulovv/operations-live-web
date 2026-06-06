@@ -1,4 +1,3 @@
-UiDataTable.vue
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import UiDataTable from '~/components/ui/UiDataTable.vue'

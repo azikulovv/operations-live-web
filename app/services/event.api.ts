@@ -1,4 +1,4 @@
-import type { ApiResponse, EventItem } from '~/types/event'
+import type { ApiResponse, EventItem, EventParticipant } from '~/types/event'
 
 export function useEventsApi() {
   const api = useApi()
@@ -9,7 +9,17 @@ export function useEventsApi() {
     })
   }
 
+  function getEventParticipants(eventId: string) {
+    return api<ApiResponse<EventParticipant[]>>('/events/participants', {
+      method: 'GET',
+      query: {
+        eventId,
+      },
+    })
+  }
+
   return {
     getEvents,
+    getEventParticipants,
   }
 }

@@ -43,3 +43,29 @@ export type EventItem = {
     registrations: number
   }
 }
+
+export interface ParticipantUser {
+  id: string
+  avatarUrl: string
+  avatarHash: string
+  email: string
+  phone?: string | null
+  telegramId?: string | null
+  username: string
+  role: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface EventParticipant {
+  id: string
+  userId: string
+  eventId: string
+  status: string
+  createdAt: string
+  cancelledAt: string | null
+  position: number | null
+  tableNumber: number
+  seatNumber: number
+  user: ParticipantUser
+}
