@@ -52,17 +52,6 @@ function formatDateTime(value: string | null | undefined) {
   }).format(date)
 }
 
-function formatTime(value: string | Date) {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return '—'
-
-  return new Intl.DateTimeFormat('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
-}
-
 function getParticipantStatus(participant: EventParticipant): HostessVisit['status'] {
   if (participant.cancelledAt) return 'completed'
 
