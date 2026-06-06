@@ -1,85 +1,151 @@
 <script setup lang="ts">
-import type { OperationEvent, OperationEventStatus } from '~/types/event'
+import { CalendarDays, Clock, MapPin, Trophy, Users } from 'lucide-vue-next'
+import type { EventItem, EventStatus } from '~/types/event'
 
 defineProps<{
-  event: OperationEvent
+  event: EventItem
 }>()
 
 const emit = defineEmits<{
-  open: [event: OperationEvent]
+  open: [event: EventItem]
 }>()
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('ru-RU').format(value)
-}
-
-function getEventStatusLabel(status: OperationEventStatus) {
-  const labels: Record<OperationEventStatus, string> = {
+function getEventStatusLabel(status: EventStatus) {
+  const labels: Record<EventStatus, string> = {
     active: 'Активное',
+    published: 'Активное',
     completed: 'Прошедшее',
   }
 
   return labels[status]
 }
 
-function getEventStatusClass(status: OperationEventStatus) {
-  const classes: Record<OperationEventStatus, string> = {
+function getEventStatusClass(status: EventStatus) {
+  const classes: Record<EventStatus, string> = {
     active: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    published: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
     completed: 'bg-slate-50 text-slate-500 ring-slate-200',
   }
 
   return classes[status]
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return value
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function formatTime(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return value
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function formatEndTime(value: string | null) {
+  return value ? `до ${formatTime(value)}` : 'Время окончания не указано'
+}
+
+function formatRegistrations(value: number) {
+  const forms = new Intl.PluralRules('ru-RU').select(value)
+
+  return forms === 'one' ? `${value} регистрация` : `${value} регистраций`
 }
 </script>
 
 <template>
   <button
     type="button"
-    class="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+    class="w-full rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:bg-slate-50 focus:ring-4 focus:ring-slate-100 focus:outline-none"
     @click="emit('open', event)"
   >
-    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div class="min-w-0">
-        <div class="flex flex-wrap items-center gap-2">
-          <h3 class="truncate text-sm font-semibold text-slate-950">
-            {{ event.title }}
-          </h3>
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div class="flex min-w-0 gap-3">
+        <NuxtImg
+          v-if="event.imageUrl"
+          :src="event.imageUrl"
+          :alt="event.title"
+          class="size-16 shrink-0 rounded-lg object-cover ring-1 ring-slate-200"
+        />
 
-          <span
-            class="inline-flex h-6 items-center rounded-full px-2 text-[11px] font-medium ring-1"
-            :class="getEventStatusClass(event.status)"
-          >
-            {{ getEventStatusLabel(event.status) }}
-          </span>
+        <div
+          v-else
+          class="flex size-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 ring-1 ring-slate-200"
+        >
+          <Trophy class="size-6" />
         </div>
 
-        <p class="mt-1 text-xs text-slate-500">
-          {{ event.date }} · {{ event.time }} · {{ event.registrationsCount }} регистраций
-        </p>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <h3 class="truncate text-sm font-semibold text-slate-950">
+              {{ event.title }}
+            </h3>
+
+            <span
+              class="inline-flex h-6 items-center rounded-full px-2 text-[11px] font-medium ring-1"
+              :class="getEventStatusClass(event.status)"
+            >
+              {{ getEventStatusLabel(event.status) }}
+            </span>
+          </div>
+
+          <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <CalendarDays class="size-3.5" />
+              {{ formatDateTime(event.startsAt) }}
+            </span>
+
+            <span class="inline-flex items-center gap-1">
+              <Clock class="size-3.5" />
+              {{ formatEndTime(event.endsAt) }}
+            </span>
+
+            <span class="inline-flex min-w-0 items-center gap-1">
+              <MapPin class="size-3.5 shrink-0" />
+              <span class="truncate">{{ event.city }}, {{ event.address }}</span>
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-3 text-right md:min-w-90">
+      <div class="grid grid-cols-2 gap-3 text-left sm:grid-cols-4 lg:min-w-110 lg:text-right">
         <div>
-          <p class="text-[11px] text-slate-400">Начислено</p>
+          <p class="text-[11px] text-slate-400">Регистрации</p>
+          <p class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-slate-950">
+            <Users class="size-3.5 lg:hidden" />
+            {{ formatRegistrations(event._count.registrations) }}
+          </p>
+        </div>
+
+        <div>
+          <p class="text-[11px] text-slate-400">Лимит</p>
           <p class="mt-1 text-xs font-semibold text-slate-950">
-            {{ formatMoney(event.totalAmount) }} ₸
+            {{ event.participantLimit }} игроков
           </p>
         </div>
 
         <div>
-          <p class="text-[11px] text-slate-400">Оплачено</p>
-          <p class="mt-1 text-xs font-semibold text-emerald-700">
-            {{ formatMoney(event.paidAmount) }} ₸
-          </p>
+          <p class="text-[11px] text-slate-400">Столы</p>
+          <p class="mt-1 text-xs font-semibold text-slate-950">{{ event.seatsPerTable }} мест</p>
         </div>
 
         <div>
-          <p class="text-[11px] text-slate-400">Долг</p>
-          <p
-            class="mt-1 text-xs font-semibold"
-            :class="event.debtAmount > 0 ? 'text-red-600' : 'text-slate-950'"
-          >
-            {{ formatMoney(event.debtAmount) }} ₸
+          <p class="text-[11px] text-slate-400">Формат</p>
+          <p class="mt-1 truncate text-xs font-semibold text-slate-950">
+            {{ event.gameType }}
           </p>
         </div>
       </div>

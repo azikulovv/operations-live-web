@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { OperationEvent } from '~/types/event'
+import type { EventItem } from '~/types/event'
 import EventCard from './EventCard.vue'
 
 defineProps<{
-  events: OperationEvent[]
+  events: EventItem[]
 }>()
 
 const emit = defineEmits<{
-  open: [event: OperationEvent]
+  open: [event: EventItem]
 }>()
 </script>
 

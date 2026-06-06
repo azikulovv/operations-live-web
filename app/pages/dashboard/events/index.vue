@@ -2,8 +2,7 @@
 import UiTabs from '~/components/ui/UiTabs.vue'
 import EventsList from '~/components/events/EventsList.vue'
 import UiSearchInput from '~/components/ui/UiSearchInput.vue'
-import { operationEvents } from '~/constants/events'
-import type { OperationEvent, OperationEventStatus } from '~/types/event'
+import type { EventFilterStatus, EventItem } from '~/types/event'
 
 definePageMeta({
   middleware: 'auth',
@@ -14,39 +13,33 @@ useHead({
   title: 'События | Operations Live',
 })
 
-const selectedStatus = ref<OperationEventStatus>('active')
+const selectedStatus = ref<EventFilterStatus>('active')
 const search = ref('')
 
-const tabs: Array<{
-  label: string
-  value: OperationEventStatus
-}> = [
-  {
-    label: 'Активные',
-    value: 'active',
+const { filteredEvents, statusCounts, isLoading, error, fetchEvents } = useEvents({
+  filters: {
+    search,
+    status: selectedStatus,
   },
-  {
-    label: 'Прошедшие',
-    value: 'completed',
-  },
-]
-
-const filteredEvents = computed(() => {
-  const query = search.value.trim().toLowerCase()
-
-  return operationEvents.filter((event) => {
-    const matchesStatus = event.status === selectedStatus.value
-
-    const matchesSearch =
-      !query ||
-      event.title.toLowerCase().includes(query) ||
-      event.date.toLowerCase().includes(query)
-
-    return matchesStatus && matchesSearch
-  })
 })
 
-function openEvent(event: OperationEvent) {
+const tabs = computed<
+  Array<{
+    label: string
+    value: EventFilterStatus
+  }>
+>(() => [
+  {
+    label: `Активные ${statusCounts.value.active}`,
+    value: 'active',
+  },
+  // {
+  //   label: `Прошедшие ${statusCounts.value.completed}`,
+  //   value: 'completed',
+  // },
+])
+
+function openEvent(event: EventItem) {
   return navigateTo(`/dashboard/events/${event.id}/today`)
 }
 </script>
@@ -90,11 +83,34 @@ function openEvent(event: OperationEvent) {
         <UiTabs v-model="selectedStatus" :items="tabs" />
 
         <div class="w-full md:w-72">
-          <UiSearchInput v-model="search" placeholder="Поиск: название или дата" />
+          <UiSearchInput v-model="search" placeholder="Поиск: название, город или дата" />
         </div>
       </div>
 
-      <EventsList :events="filteredEvents" @open="openEvent" />
+      <div v-if="isLoading" class="grid gap-3">
+        <div
+          v-for="index in 3"
+          :key="index"
+          class="h-28 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
+        />
+      </div>
+
+      <div
+        v-else-if="error"
+        class="rounded-xl border border-red-100 bg-red-50 px-4 py-6 text-center"
+      >
+        <p class="text-sm font-semibold text-red-700">{{ error }}</p>
+
+        <button
+          type="button"
+          class="mt-3 h-9 rounded-xl bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+          @click="fetchEvents"
+        >
+          Повторить
+        </button>
+      </div>
+
+      <EventsList v-else :events="filteredEvents" @open="openEvent" />
     </UiCard>
   </div>
 </template>
