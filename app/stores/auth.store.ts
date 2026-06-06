@@ -7,6 +7,8 @@ type LoginPayload = {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+  const api = useApi()
+
   const token = useCookie<string | null>('access_token', {
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
@@ -23,14 +25,28 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
 
     try {
-      const api = useApi()
-
       const response = await api<SignInResponse>('/auth/signin', {
         method: 'POST',
         body: payload,
       })
 
       token.value = response.accessToken
+      user.value = response.user
+
+      return response
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function fetchMe() {
+    isLoading.value = true
+
+    try {
+      const response = await api<SignInResponse>('/auth/me', {
+        method: 'GET',
+      })
+
       user.value = response.user
 
       return response
@@ -53,6 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     isAuthenticated,
     signIn,
+    fetchMe,
     signOut,
   }
 })
