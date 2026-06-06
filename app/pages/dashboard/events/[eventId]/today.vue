@@ -201,12 +201,12 @@ onBeforeUnmount(() => {
           </p>
         </div>
 
-        <button
+        <!-- <button
           type="button"
           class="h-9 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800"
         >
           Добавить игрока
-        </button>
+        </button> -->
       </div>
 
       <UiCard>
