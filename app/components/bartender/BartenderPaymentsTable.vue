@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
+import type { UpdateBartenderSaleDto } from '~/types/bartender-sales'
+import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type BartenderPayment = {
-  id: string
-  badge: string | number
-  nickname: string
+  participantId: string
+  badge: string | null
+  nickname: string | null
   amount: number
   comment: string | null
-  createdAt: string
+  updatedAt: string | null
 }
 
 defineProps<{
   payments: BartenderPayment[]
+}>()
+
+const emit = defineEmits<{
+  change: [participantId: string, payload: UpdateBartenderSaleDto]
 }>()
 
 const columns: DataTableColumn[] = [
@@ -36,19 +42,11 @@ const columns: DataTableColumn[] = [
     width: '260px',
   },
   {
-    key: 'createdAt',
-    label: 'CreatedAt',
+    key: 'updatedAt',
+    label: 'UpdatedAt',
     width: '160px',
   },
 ]
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'KZT',
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 </script>
 
 <template>
@@ -72,20 +70,35 @@ function formatMoney(value: number) {
     </template>
 
     <template #cell-amount="{ row }">
-      <span class="font-semibold text-slate-950">
-        {{ formatMoney((row as BartenderPayment).amount) }}
-      </span>
+      <EditableCellInput
+        :model-value="(row as BartenderPayment).amount!"
+        type="number"
+        inputmode="numeric"
+        class="w-35"
+        @update:model-value="
+          emit('change', (row as BartenderPayment).participantId, {
+            amount: Number($event),
+          })
+        "
+      />
     </template>
 
     <template #cell-comment="{ row }">
-      <div class="max-w-64 truncate text-slate-500">
-        {{ (row as BartenderPayment).comment || '—' }}
-      </div>
+      <EditableCellInput
+        :model-value="(row as BartenderPayment).comment!"
+        type="text"
+        class="w-65"
+        @update:model-value="
+          emit('change', (row as BartenderPayment).participantId, {
+            comment: String($event),
+          })
+        "
+      />
     </template>
 
-    <template #cell-createdAt="{ row }">
+    <template #cell-updatedAt="{ row }">
       <span class="whitespace-nowrap text-slate-500">
-        {{ (row as BartenderPayment).createdAt }}
+        {{ (row as BartenderPayment).updatedAt }}
       </span>
     </template>
   </UiDataTable>
