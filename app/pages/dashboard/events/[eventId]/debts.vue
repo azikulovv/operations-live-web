@@ -45,6 +45,7 @@ async function onChange(participantId: string, payload: UpdateDebtDto) {
 <template>
   <div class="mx-auto max-w-7xl">
     <SharedPageHeader
+      class="mb-4"
       title="Долги"
       description="Сумма долга, комментарий и признак закрытия по каждому участнику."
       :breadcrumbs="[
