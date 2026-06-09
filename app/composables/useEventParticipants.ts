@@ -1,31 +1,29 @@
 import type { Ref } from 'vue'
+import { getMockEventParticipants } from '~/mocks/event.mock'
 import { useEventsApi } from '~/services/event.api'
 import type { EventParticipant } from '~/types/event'
 
 export const useEventParticipants = (eventId: Ref<string>) => {
   const api = useEventsApi()
-  const participants = ref<EventParticipant[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
+  const {
+    items: participants,
+    isLoading,
+    error,
+    fetchItems,
+    resetItems,
+  } = useAsyncList<EventParticipant>({
+    load: () => api.getEventParticipants(eventId.value),
+    fallback: () => getMockEventParticipants(eventId.value),
+    errorMessage: 'Не удалось загрузить игроков. Попробуйте обновить список.',
+  })
 
   async function fetchParticipants() {
     if (!eventId.value) {
-      participants.value = []
+      resetItems()
       return
     }
 
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const response = await api.getEventParticipants(eventId.value)
-      participants.value = getApiData(response)
-    } catch {
-      participants.value = []
-      error.value = 'Не удалось загрузить игроков. Попробуйте обновить список.'
-    } finally {
-      isLoading.value = false
-    }
+    await fetchItems()
   }
 
   watch(eventId, fetchParticipants, {

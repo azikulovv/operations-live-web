@@ -80,30 +80,6 @@ const promotionTypeOptions: Array<{ value: EventPromotionType; label: string }> 
   { value: 'VIP', label: 'VIP' },
 ]
 
-// function getPromotionTypeLabel(type: EventPromotionType | string | undefined) {
-//   if (!type) return 'Не задано'
-
-//   const option = promotionTypeOptions.find((item) => item.value === type)
-
-//   return option?.label ?? type
-// }
-
-// function getPromotionTypeClass(type: EventPromotionType | string | undefined) {
-//   const classes: Record<EventPromotionType, string> = {
-//     CERTIFICATE: 'bg-violet-50 text-violet-700 ring-violet-100',
-//     DEALER: 'bg-amber-50 text-amber-700 ring-amber-100',
-//     DISCOUNT: 'bg-sky-50 text-sky-700 ring-sky-100',
-//     FIFTH_VISIT: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
-//     FREE_ENTRY: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-//     LADIES_DAY: 'bg-rose-50 text-rose-700 ring-rose-100',
-//     VIP: 'bg-slate-950 text-white ring-slate-950',
-//   }
-
-//   if (!type || !(type in classes)) return 'bg-slate-50 text-slate-600 ring-slate-200'
-
-//   return classes[type as EventPromotionType]
-// }
-
 function isPromotionUsed(promotion: PromotionTableRow) {
   return promotion.used
 }
@@ -125,13 +101,6 @@ function isPromotionUsed(promotion: PromotionTableRow) {
 
     <template #cell-type="{ row }">
       <div class="flex items-center gap-2">
-        <!-- <span
-          class="inline-flex h-6 min-w-16 items-center justify-center rounded-full px-2 text-[11px] font-medium ring-1"
-          :class="getPromotionTypeClass((row as PromotionTableRow).promotionType)"
-        >
-          {{ getPromotionTypeLabel((row as PromotionTableRow).promotionType) }}
-        </span> -->
-
         <select
           :value="(row as PromotionTableRow).promotionType"
           class="h-8 min-w-28 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"

@@ -20,11 +20,8 @@ export function useEventsApi() {
   }
 
   function getEventParticipants(eventId: string) {
-    return api<ApiMaybeResponse<EventParticipant[]>>('/events/participants', {
+    return api<ApiMaybeResponse<EventParticipant[]>>(`/events/${eventId}/participants`, {
       method: 'GET',
-      query: {
-        eventId,
-      },
     })
   }
 

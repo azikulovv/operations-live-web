@@ -4,7 +4,6 @@ import {
   CalendarDays,
   Gift,
   GlassWater,
-  // LayoutDashboard,
   Table,
   Trophy,
   Wallet,
@@ -59,7 +58,7 @@ export const eventNavigation: EventNavigationItem[] = [
   },
   {
     label: 'Бар',
-    segment: 'bar',
+    segment: 'bartender',
     icon: GlassWater,
     available: [UserRoles.manager, UserRoles.bartender],
   },
@@ -90,10 +89,4 @@ export const dashboardNavigation: NavigationItem[] = [
     icon: BookA,
     available: [UserRoles.manager, UserRoles.admin, UserRoles.hostess],
   },
-  // {
-  //   label: 'Дашборд',
-  //   to: '/dashboard',
-  //   icon: LayoutDashboard,
-  //   available: [UserRoles.manager, UserRoles.admin, UserRoles.hostess],
-  // },
 ]

@@ -106,6 +106,7 @@ export interface EventParticipantPayment {
   participantId: string
   tournament: number
   bar: number
+  barComment?: string | null
   games: number
   paid: number
   createdAt: string

@@ -1,32 +1,30 @@
 import type { Ref } from 'vue'
+import { getMockEventPromotions } from '~/mocks/event.mock'
 import { useEventsApi } from '~/services/event.api'
 import type { EventPromotion, UpdateEventPromotionPayload } from '~/types/event'
 
 export const useEventPromotions = (eventId: Ref<string>) => {
   const api = useEventsApi()
-  const promotions = ref<EventPromotion[]>([])
-  const isLoading = ref(false)
+  const {
+    items: promotions,
+    isLoading,
+    error,
+    fetchItems,
+    resetItems,
+  } = useAsyncList<EventPromotion>({
+    load: () => api.getEventPromotions(eventId.value),
+    fallback: getMockEventPromotions,
+    errorMessage: 'Не удалось загрузить промо. Попробуйте обновить список.',
+  })
   const isSaving = ref(false)
-  const error = ref<string | null>(null)
 
   async function fetchPromotions() {
     if (!eventId.value) {
-      promotions.value = []
+      resetItems()
       return
     }
 
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const response = await api.getEventPromotions(eventId.value)
-      promotions.value = getApiData(response)
-    } catch {
-      promotions.value = []
-      error.value = 'Не удалось загрузить промо. Попробуйте обновить список.'
-    } finally {
-      isLoading.value = false
-    }
+    await fetchItems()
   }
 
   async function updatePromotion(participantId: string, payload: UpdateEventPromotionPayload) {

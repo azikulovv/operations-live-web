@@ -1,32 +1,30 @@
 import type { Ref } from 'vue'
+import { getMockEventPayments } from '~/mocks/event.mock'
 import { useEventsApi } from '~/services/event.api'
 import type { EventPayment, UpdateEventPaymentPayload } from '~/types/event'
 
 export const useEventPayments = (eventId: Ref<string>) => {
   const api = useEventsApi()
-  const payments = ref<EventPayment[]>([])
-  const isLoading = ref(false)
+  const {
+    items: payments,
+    isLoading,
+    error,
+    fetchItems,
+    resetItems,
+  } = useAsyncList<EventPayment>({
+    load: () => api.getEventPayments(eventId.value),
+    fallback: getMockEventPayments,
+    errorMessage: 'Не удалось загрузить оплаты. Попробуйте обновить список.',
+  })
   const isSaving = ref(false)
-  const error = ref<string | null>(null)
 
   async function fetchPayments() {
     if (!eventId.value) {
-      payments.value = []
+      resetItems()
       return
     }
 
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const response = await api.getEventPayments(eventId.value)
-      payments.value = getApiData(response)
-    } catch {
-      payments.value = []
-      error.value = 'Не удалось загрузить оплаты. Попробуйте обновить список.'
-    } finally {
-      isLoading.value = false
-    }
+    await fetchItems()
   }
 
   async function updatePayment(participantId: string, payload: UpdateEventPaymentPayload) {

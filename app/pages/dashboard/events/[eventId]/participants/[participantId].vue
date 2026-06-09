@@ -72,12 +72,6 @@ function syncForm(value: EventParticipant | null) {
   form.paid = value.payment?.paid ?? 0
 }
 
-function getPayloadData<T>(payload: T[] | { data?: T[] } | null | undefined) {
-  if (Array.isArray(payload)) return payload
-
-  return Array.isArray(payload?.data) ? payload.data : []
-}
-
 function handleParticipantsUpdated(
   payload: { eventId?: string; data?: EventParticipant[] } | EventParticipant[],
 ) {
@@ -85,11 +79,11 @@ function handleParticipantsUpdated(
     return
   }
 
-  participants.value = getPayloadData(payload)
+  participants.value = getApiData(payload)
 }
 
 function handleActiveEventsUpdated(payload: { data?: EventItem[] } | EventItem[]) {
-  events.value = getPayloadData(payload)
+  events.value = getApiData(payload)
 }
 
 watch(participant, syncForm, {

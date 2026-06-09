@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { getMockEvents } from '~/mocks/event.mock'
 import { useEventsApi } from '~/services/event.api'
 import type { EventFilterStatus, EventItem } from '~/types/event'
 
@@ -19,9 +20,16 @@ function getFilterStatus(event: EventItem): EventFilterStatus {
 
 export const useEvents = (options: UseEventsOptions = {}) => {
   const api = useEventsApi()
-  const events = ref<EventItem[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
+  const {
+    items: events,
+    isLoading,
+    error,
+    fetchItems,
+  } = useAsyncList<EventItem>({
+    load: api.getEvents,
+    fallback: getMockEvents,
+    errorMessage: 'Не удалось загрузить события. Попробуйте обновить страницу.',
+  })
 
   const filterEvents = (search: Ref<string>, selectedStatus: Ref<EventFilterStatus>) => {
     return computed(() => {
@@ -65,18 +73,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
   })
 
   async function fetchEvents() {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const response = await api.getEvents()
-      events.value = getApiData(response)
-    } catch {
-      events.value = []
-      error.value = 'Не удалось загрузить события. Попробуйте обновить страницу.'
-    } finally {
-      isLoading.value = false
-    }
+    await fetchItems()
   }
 
   onMounted(fetchEvents)

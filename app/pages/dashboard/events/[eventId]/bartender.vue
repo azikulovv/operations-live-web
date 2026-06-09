@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { HostessVisit } from '~/components/today/HostessVisitsTable.vue'
-import HostessVisitsTable from '~/components/today/HostessVisitsTable.vue'
+import type { BartenderPayment } from '~/components/bartender/BartenderPaymentsTable.vue'
+import BartenderPaymentsTable from '~/components/bartender/BartenderPaymentsTable.vue'
 import type { EventItem, EventParticipant } from '~/types/event'
 
 definePageMeta({
@@ -8,10 +8,14 @@ definePageMeta({
   layout: 'dashboard',
 })
 
-const route = useRoute()
+useHead({
+  title: computed(() => `${event.value?.title || 'Событие'} · Бармен | Operations Live`),
+})
 
+const route = useRoute()
 const eventId = computed(() => String(route.params.eventId))
 const eventSocket = useEventSocket()
+
 let realtimeSocket: ReturnType<typeof eventSocket.connect> = null
 let stopParticipantsSocketWatch: (() => void) | null = null
 
@@ -32,10 +36,6 @@ const {
   error: participantsError,
   fetchParticipants,
 } = useEventParticipants(participantEventId)
-
-useHead({
-  title: computed(() => `${event.value?.title || 'Событие'} · Сегодня | Operations Live`),
-})
 
 const search = ref('')
 
@@ -60,41 +60,6 @@ function formatDateTime(value: string | null | undefined) {
   }).format(date)
 }
 
-function getParticipantStatus(participant: EventParticipant): HostessVisit['status'] {
-  if (participant.cancelledAt) return 'completed'
-
-  return participant.status === 'PARTICIPANT' ? 'registered' : 'in_tournament'
-}
-
-const visits = computed<HostessVisit[]>(() => {
-  return participants.value.map((participant, index) => ({
-    id: participant.id,
-    badge: participant.userBadge ?? participant.position ?? index + 1,
-    nickname: participant.user.username || participant.user.email,
-    email: participant.user.email,
-    phone: participant.user.phone ?? '',
-    registeredAt: formatDateTime(participant.createdAt),
-    tournament: eventTitle.value,
-    source: 'app',
-    status: getParticipantStatus(participant),
-    tableNumber: participant.tableNumber,
-    seatNumber: participant.seatNumber,
-    tournamentAmount: participant.payment?.tournament ?? 0,
-    barAmount: participant.payment?.bar ?? 0,
-    dartsAmount: participant.payment?.games ?? 0,
-    totalAmount:
-      (participant.payment?.tournament ?? 0) +
-      (participant.payment?.bar ?? 0) +
-      (participant.payment?.games ?? 0),
-    paidAmount: participant.payment?.paid ?? 0,
-    isClosed: Boolean(participant.closed),
-    debtComment:
-      participant.tableNumber && participant.seatNumber
-        ? `Стол ${participant.tableNumber}, место ${participant.seatNumber}`
-        : '',
-  }))
-})
-
 function handleActiveEventsUpdated(payload: { data?: EventItem[] } | EventItem[]) {
   events.value = getApiData(payload)
 }
@@ -109,16 +74,37 @@ function handleParticipantsUpdated(
   participants.value = getApiData(payload)
 }
 
-const filteredVisits = computed(() => {
+/**
+ * ВАЖНО:
+ * Сейчас сумма бара берется из participant.payment?.bar.
+ * Если на backend будет отдельная модель bartender payments,
+ * лучше будет заменить этот computed на отдельный useBartenderPayments(eventId).
+ */
+const payments = computed<BartenderPayment[]>(() => {
+  return participants.value
+    .filter((participant) => {
+      return Number(participant.payment?.bar ?? 0) > 0
+    })
+    .map((participant, index) => ({
+      id: participant.id,
+      badge: participant.userBadge ?? participant.position ?? index + 1,
+      nickname: participant.user.username || participant.user.email,
+      amount: participant.payment?.bar ?? 0,
+      comment: participant.payment?.barComment ?? '',
+      createdAt: formatDateTime(participant.payment?.updatedAt ?? participant.createdAt),
+    }))
+})
+
+const filteredPayments = computed(() => {
   const query = search.value.trim().toLowerCase()
 
-  if (!query) return visits.value
+  if (!query) return payments.value
 
-  return visits.value.filter((visit) => {
+  return payments.value.filter((payment) => {
     return (
-      visit.nickname.toLowerCase().includes(query) ||
-      String(visit.badge).includes(query) ||
-      visit.tournament.toLowerCase().includes(query)
+      payment.nickname.toLowerCase().includes(query) ||
+      String(payment.badge).includes(query) ||
+      payment.comment?.toLowerCase().includes(query)
     )
   })
 })
@@ -134,8 +120,10 @@ onMounted(() => {
   if (!socket) return
 
   realtimeSocket = socket
+
   socket.on('events:active:updated', handleActiveEventsUpdated)
   socket.on('events:participants:updated', handleParticipantsUpdated)
+
   socket.emit('events:active:subscribe')
 
   stopParticipantsSocketWatch = watch(
@@ -165,9 +153,11 @@ onBeforeUnmount(() => {
   if (!realtimeSocket) return
 
   realtimeSocket.emit('events:active:unsubscribe')
+
   realtimeSocket.emit('events:participants:unsubscribe', {
     eventId: participantEventId.value,
   })
+
   realtimeSocket.off('events:active:updated', handleActiveEventsUpdated)
   realtimeSocket.off('events:participants:updated', handleParticipantsUpdated)
 })
@@ -178,41 +168,36 @@ onBeforeUnmount(() => {
     <template v-if="event || isEventsLoading">
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <UiBreadcrumb
-            :items="[
-              { label: 'Сегодня' },
-              { label: eventTitle },
-              { label: formatDateTime(event?.startsAt) },
-            ]"
-          />
+          <div class="flex items-center gap-2">
+            <p class="text-xs font-medium text-slate-500">Бар</p>
 
-          <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Хостес</h2>
+            <span class="size-1 rounded-full bg-slate-300" />
+
+            <p class="text-xs text-slate-400">
+              {{ eventTitle }} · {{ formatDateTime(event?.startsAt) }}
+            </p>
+          </div>
+
+          <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Бармен</h2>
 
           <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-            Регистрации, Badge, статусы, начисления и закрытие визита.
+            Учет оплат по бару: Badge, Nickname, сумма, комментарий и время создания записи.
           </p>
         </div>
-
-        <!-- <button
-          type="button"
-          class="h-9 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800"
-        >
-          Добавить игрока
-        </button> -->
       </div>
 
       <UiCard>
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h3 class="text-sm font-semibold tracking-tight text-slate-950">Список игроков</h3>
+            <h3 class="text-sm font-semibold tracking-tight text-slate-950">Список оплат</h3>
 
             <p class="mt-1 text-xs text-slate-500">
-              {{ participants.length }} игроков зарегистрировано на событие.
+              {{ payments.length }} записей по бару на событие.
             </p>
           </div>
 
           <div class="w-full md:w-72">
-            <UiSearchInput v-model="search" placeholder="Поиск: Badge, Nickname" />
+            <UiSearchInput v-model="search" placeholder="Поиск: Badge, Nickname, Comment" />
           </div>
         </div>
 
@@ -235,7 +220,7 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <HostessVisitsTable v-else :visits="filteredVisits" />
+        <BartenderPaymentsTable v-else :payments="filteredPayments" />
       </UiCard>
     </template>
 
