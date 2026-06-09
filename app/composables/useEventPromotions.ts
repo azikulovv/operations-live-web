@@ -1,56 +1,21 @@
 import type { Ref } from 'vue'
-import { getMockEventPromotions } from '~/mocks/event.mock'
-import { useEventsApi } from '~/services/event.api'
-import type { EventPromotion, UpdateEventPromotionPayload } from '~/types/event'
+import type { PromotionRow, UpdatePromotionDto } from '~/types/operations'
 
-export const useEventPromotions = (eventId: Ref<string>) => {
-  const api = useEventsApi()
-  const {
-    items: promotions,
-    isLoading,
-    error,
-    fetchItems,
-    resetItems,
-  } = useAsyncList<EventPromotion>({
-    load: () => api.getEventPromotions(eventId.value),
-    fallback: getMockEventPromotions,
-    errorMessage: 'Не удалось загрузить промо. Попробуйте обновить список.',
-  })
-  const isSaving = ref(false)
-
-  async function fetchPromotions() {
-    if (!eventId.value) {
-      resetItems()
-      return
-    }
-
-    await fetchItems()
-  }
-
-  async function updatePromotion(participantId: string, payload: UpdateEventPromotionPayload) {
-    isSaving.value = true
-    error.value = null
-
-    try {
-      await api.updateEventPromotion(participantId, payload)
-      await fetchPromotions()
-    } catch {
-      error.value = 'Не удалось сохранить промо. Попробуйте ещё раз.'
-    } finally {
-      isSaving.value = false
-    }
-  }
-
-  watch(eventId, fetchPromotions, {
-    immediate: true,
+export const useEventPromotions = (eventId: string | Ref<string>) => {
+  const { rows, pending, error, fetchList, updateItem } = useRealtimeList<
+    PromotionRow,
+    UpdatePromotionDto
+  >(eventId, {
+    listPath: (eventId) => `/events/${eventId}/promotions`,
+    updatePath: (participantId) => `/promotions/${participantId}`,
+    listUpdatedEvent: 'promotions:list-updated',
   })
 
   return {
-    promotions,
-    isLoading,
-    isSaving,
+    promotions: rows,
+    isLoading: pending,
     error,
-    fetchPromotions,
-    updatePromotion,
+    fetchPromotions: fetchList,
+    updatePromotion: updateItem,
   }
 }

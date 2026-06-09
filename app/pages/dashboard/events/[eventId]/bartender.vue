@@ -10,6 +10,7 @@ const route = useRoute()
 const eventId = String(route.params.eventId)
 
 const { rows, pending, error, updateSale, fetchList } = useBartenderSales(eventId)
+const { dashboard, pending: dashboardPending } = useShiftDashboard(eventId)
 
 async function onChange(participantId: string, payload: UpdateBartenderSaleDto) {
   try {
@@ -39,6 +40,8 @@ async function onChange(participantId: string, payload: UpdateBartenderSaleDto) 
         </p>
       </div>
     </div>
+
+    <ShiftDashboardSummary :dashboard="dashboard" :pending="dashboardPending" />
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

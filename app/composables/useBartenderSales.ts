@@ -1,57 +1,26 @@
-import { socket } from '@/shared/socket'
-import { apiRequest } from '~/helpers/api.helper'
-import type {
-  BartenderSaleRow,
-  BartenderSalesListUpdatedPayload,
-  UpdateBartenderSaleDto,
-} from '~/types/bartender-sales'
+import type { Ref } from 'vue'
+import type { BartenderSaleRow, UpdateBartenderSaleDto } from '~/types/operations'
 
-export function useBartenderSales(eventId: string) {
-  const rows = ref<BartenderSaleRow[]>([])
-  const pending = ref(false)
-  const error = ref<string | null>(null)
-
-  async function fetchList() {
-    pending.value = true
-    error.value = null
-
-    try {
-      const response = await apiRequest<BartenderSaleRow[]>(`/events/${eventId}/bartender-sales`)
-      rows.value = response.data
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Unknown error'
-    } finally {
-      pending.value = false
-    }
-  }
-
-  async function updateSale(participantId: string, dto: UpdateBartenderSaleDto) {
-    const response = await apiRequest(`/bartender-sales/${participantId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(dto),
-    })
-
-    return response.data
-  }
-
-  function onListUpdated(payload: BartenderSalesListUpdatedPayload) {
-    if (payload.eventId !== eventId) return
-    rows.value = payload.data
-  }
-
-  socket.on('bartender-sales:list-updated', onListUpdated)
-
-  onBeforeUnmount(() => {
-    socket.off('bartender-sales:list-updated', onListUpdated)
+export function useBartenderSales(eventId: string | Ref<string>) {
+  const { rows, pending, error, fetchList, updateItem } = useRealtimeList<
+    BartenderSaleRow,
+    UpdateBartenderSaleDto
+  >(eventId, {
+    listPath: (eventId) => `/events/${eventId}/bartender-sales`,
+    updatePath: (participantId) => `/bartender-sales/${participantId}`,
+    listUpdatedEvent: 'bartender-sales:list-updated',
   })
 
-  fetchList()
+  const totalAmount = computed(() =>
+    rows.value.reduce((sum, row) => sum + row.bartenderSale.amount, 0),
+  )
 
   return {
     rows,
     pending,
     error,
+    totalAmount,
     fetchList,
-    updateSale,
+    updateSale: updateItem,
   }
 }

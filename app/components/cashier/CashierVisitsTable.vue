@@ -5,7 +5,7 @@ export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
 export type CashierVisit = {
   id: string
   participantId: string
-  badge: number
+  badge: number | string
   nickname: string
   tournament: string
   totalAmount: number

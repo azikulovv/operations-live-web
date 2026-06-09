@@ -69,9 +69,7 @@ function openEvent(event: EventItem) {
           ]"
         />
 
-        <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">
-          События
-        </h2>
+        <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">События</h2>
 
         <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
           Выберите событие, чтобы открыть рабочие экраны хостес, кассы и promotions.
@@ -84,9 +82,7 @@ function openEvent(event: EventItem) {
         <div>
           <h3 class="text-sm font-semibold tracking-tight text-slate-950">Список событий</h3>
 
-          <p class="mt-1 text-xs text-slate-500">
-            Загружено {{ eventsCountText }} из API.
-          </p>
+          <p class="mt-1 text-xs text-slate-500">Загружено {{ eventsCountText }} из API.</p>
         </div>
 
         <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">

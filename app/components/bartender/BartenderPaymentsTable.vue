@@ -5,7 +5,7 @@ import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type BartenderPayment = {
   participantId: string
-  badge: string | null
+  badge: string | number | null
   nickname: string | null
   amount: number
   comment: string | null
@@ -53,7 +53,7 @@ const columns: DataTableColumn[] = [
   <UiDataTable
     :columns="columns"
     :rows="payments"
-    row-key="id"
+    row-key="participantId"
     min-width="830px"
     empty-text="Записей пока нет"
   >

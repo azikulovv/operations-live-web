@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CashierVisit } from '~/components/cashier/CashierVisitsTable.vue'
 import CashierVisitsTable from '~/components/cashier/CashierVisitsTable.vue'
-import type { EventPayment, EventPaymentStatus } from '~/types/event'
+import type { PaymentRow, PaymentStatus } from '~/types/operations'
 
 definePageMeta({
   middleware: 'auth',
@@ -21,6 +21,7 @@ const event = computed(() => {
 })
 
 const paymentsEventId = computed(() => event.value?.externalId ?? eventId.value)
+const { dashboard, pending: dashboardPending } = useShiftDashboard(paymentsEventId)
 
 const {
   payments,
@@ -51,7 +52,7 @@ function mapPaymentStatus(status: string | undefined): CashierVisit['paymentStat
   return 'unpaid'
 }
 
-function getPaymentStatus(visit: CashierVisit): EventPaymentStatus {
+function getPaymentStatus(visit: CashierVisit): PaymentStatus {
   if (visit.payableAmount <= 0) return 'PAID'
   if (visit.paidAmount >= visit.payableAmount) return 'PAID'
   if (visit.paidAmount <= 0) return 'UNPAID'
@@ -59,11 +60,11 @@ function getPaymentStatus(visit: CashierVisit): EventPaymentStatus {
   return 'PARTIALLY_PAID'
 }
 
-function getPlayerName(payment: EventPayment) {
-  return payment.user.name || payment.user.email
+function getPlayerName(payment: PaymentRow) {
+  return payment.user.name || payment.user.email || '—'
 }
 
-function getForm(payment: EventPayment) {
+function getForm(payment: PaymentRow) {
   const existing = paymentForms[payment.participantId]
 
   if (existing) return existing
@@ -180,6 +181,8 @@ async function savePayment(visit: CashierVisit) {
         </p>
       </div>
     </div>
+
+    <ShiftDashboardSummary :dashboard="dashboard" :pending="dashboardPending" />
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PromotionTableRow } from '~/components/promotions/PromotionsTable.vue'
 import PromotionsTable from '~/components/promotions/PromotionsTable.vue'
-import type { EventPromotion } from '~/types/event'
+import type { PromotionRow } from '~/types/operations'
 
 definePageMeta({
   middleware: 'auth',
@@ -53,7 +53,7 @@ useHead({
   title: computed(() => `${eventTitle.value} · Promotions | Operations Live`),
 })
 
-function getSearchText(promotion: EventPromotion) {
+function getSearchText(promotion: PromotionRow) {
   return [
     promotion.user.name,
     promotion.user.email,
@@ -69,11 +69,11 @@ function getSearchText(promotion: EventPromotion) {
     .toLowerCase()
 }
 
-function getPlayerName(promotion: EventPromotion) {
-  return promotion.user.name || promotion.user.email
+function getPlayerName(promotion: PromotionRow) {
+  return promotion.user.name || promotion.user.email || '—'
 }
 
-function getForm(promotion: EventPromotion) {
+function getForm(promotion: PromotionRow) {
   const existing = promotionForms[promotion.participantId]
 
   if (existing) return existing
