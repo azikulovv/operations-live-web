@@ -23,7 +23,7 @@ const emit = defineEmits<{
 
 const columns: DataTableColumn[] = [
   { key: 'badge', label: 'Бейдж', width: '90px' },
-  { key: 'nickname', label: 'Nickname', width: '180px' },
+  { key: 'nickname', label: 'Имя пользователя', width: '180px' },
   { key: 'amount', label: 'Долг', align: 'right', width: '140px' },
   { key: 'closed', label: 'Закрыт', width: '110px' },
   { key: 'comment', label: 'Комментарий', width: '260px' },
