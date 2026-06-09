@@ -7,6 +7,7 @@ import type {
   EventPromotion,
   UpdateEventPaymentPayload,
   UpdateEventParticipantPayload,
+  UpdateEventPromotionPayload,
 } from '~/types/event'
 
 export function useEventsApi() {
@@ -46,6 +47,13 @@ export function useEventsApi() {
     })
   }
 
+  function updateEventPromotion(participantId: string, body: UpdateEventPromotionPayload) {
+    return api<ApiResponse<EventPromotion>>(`/promotions/${participantId}`, {
+      method: 'PATCH',
+      body,
+    })
+  }
+
   function updateEventParticipant(participantId: string, body: UpdateEventParticipantPayload) {
     return api<ApiResponse<EventParticipant>>(`/events/participants/${participantId}`, {
       method: 'PATCH',
@@ -59,6 +67,7 @@ export function useEventsApi() {
     getEventParticipants,
     getEventPromotions,
     updateEventPayment,
+    updateEventPromotion,
     updateEventParticipant,
   }
 }

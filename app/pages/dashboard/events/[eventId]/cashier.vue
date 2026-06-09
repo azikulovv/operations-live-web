@@ -82,6 +82,9 @@ function getForm(payment: EventPayment) {
 const visits = computed<CashierVisit[]>(() => {
   return payments.value.map((payment) => {
     const form = getForm(payment)
+    const discountPercent = payment.promotion?.discountPercent ?? 0
+    const discountAmount = form.totalAmount * (discountPercent / 100)
+    const payableAmount = Math.max(form.totalAmount - discountAmount, 0)
 
     return {
       id: payment.payment?.id ?? payment.participantId,
@@ -90,8 +93,8 @@ const visits = computed<CashierVisit[]>(() => {
       nickname: getPlayerName(payment),
       tournament: eventTitle.value,
       totalAmount: form.totalAmount,
-      discountAmount: payment.payment?.discountAmount ?? 0,
-      payableAmount: Math.max(form.totalAmount - (payment.payment?.discountAmount ?? 0), 0),
+      discountAmount: payment.promotion?.discountPercent ?? 0,
+      payableAmount: payableAmount,
       paidAmount: form.paidAmount,
       paymentStatus: mapPaymentStatus(payment.payment?.status),
       comment: form.comment,

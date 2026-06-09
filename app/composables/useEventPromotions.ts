@@ -1,11 +1,12 @@
 import type { Ref } from 'vue'
 import { useEventsApi } from '~/services/event.api'
-import type { EventPromotion } from '~/types/event'
+import type { EventPromotion, UpdateEventPromotionPayload } from '~/types/event'
 
 export const useEventPromotions = (eventId: Ref<string>) => {
   const api = useEventsApi()
   const promotions = ref<EventPromotion[]>([])
   const isLoading = ref(false)
+  const isSaving = ref(false)
   const error = ref<string | null>(null)
 
   async function fetchPromotions() {
@@ -28,6 +29,20 @@ export const useEventPromotions = (eventId: Ref<string>) => {
     }
   }
 
+  async function updatePromotion(participantId: string, payload: UpdateEventPromotionPayload) {
+    isSaving.value = true
+    error.value = null
+
+    try {
+      await api.updateEventPromotion(participantId, payload)
+      await fetchPromotions()
+    } catch {
+      error.value = 'Не удалось сохранить промо. Попробуйте ещё раз.'
+    } finally {
+      isSaving.value = false
+    }
+  }
+
   watch(eventId, fetchPromotions, {
     immediate: true,
   })
@@ -35,7 +50,9 @@ export const useEventPromotions = (eventId: Ref<string>) => {
   return {
     promotions,
     isLoading,
+    isSaving,
     error,
     fetchPromotions,
+    updatePromotion,
   }
 }

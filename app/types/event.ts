@@ -29,6 +29,14 @@ export type UpdateEventPaymentPayload = Partial<{
   comment: string | null
 }>
 
+export type UpdateEventPromotionPayload = Partial<{
+  promotionType: EventPromotionType | string
+  reason: string | null
+  discountPercent: number
+  used: number
+  comment: string | null
+}>
+
 export type OperationEvent = {
   id: string
   title: string
@@ -176,4 +184,5 @@ export type EventPayment = {
   position: number | null
   user: EventPaymentUser
   payment: EventPaymentDetails | null
+  promotion: EventPromotionDetails | null
 }

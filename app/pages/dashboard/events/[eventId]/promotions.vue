@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PromotionTableRow } from '~/components/promotions/PromotionsTable.vue'
 import PromotionsTable from '~/components/promotions/PromotionsTable.vue'
 import type { EventPromotion } from '~/types/event'
 
@@ -26,9 +27,23 @@ const {
   isLoading: isPromotionsLoading,
   error: promotionsError,
   fetchPromotions,
+  updatePromotion,
 } = useEventPromotions(promotionsEventId)
 
 const search = ref('')
+const savingPromotionId = ref<string | null>(null)
+const promotionForms = reactive<
+  Record<
+    string,
+    {
+      promotionType: string
+      reason: string
+      discountPercent: number
+      used: number
+      comment: string
+    }
+  >
+>({})
 
 const eventTitle = computed(() => event.value?.title || eventId.value)
 const isLoading = computed(() => isEventsLoading.value || isPromotionsLoading.value)
@@ -54,13 +69,118 @@ function getSearchText(promotion: EventPromotion) {
     .toLowerCase()
 }
 
+function getPlayerName(promotion: EventPromotion) {
+  return promotion.user.name || promotion.user.email
+}
+
+function getForm(promotion: EventPromotion) {
+  const existing = promotionForms[promotion.participantId]
+
+  if (existing) return existing
+
+  const form = {
+    promotionType: promotion.promotion?.promotionType ?? 'DISCOUNT',
+    reason: promotion.promotion?.reason ?? '',
+    discountPercent: promotion.promotion?.discountPercent ?? 0,
+    used: promotion.promotion?.used ?? 0,
+    comment: promotion.promotion?.comment ?? '',
+  }
+
+  promotionForms[promotion.participantId] = form
+
+  return form
+}
+
+const promotionRows = computed<PromotionTableRow[]>(() => {
+  return promotions.value.map((promotion) => {
+    const form = getForm(promotion)
+
+    return {
+      participantId: promotion.participantId,
+      nickname: getPlayerName(promotion),
+      promotionType: form.promotionType,
+      reason: form.reason,
+      discountPercent: form.discountPercent,
+      used: form.used,
+      comment: form.comment,
+    }
+  })
+})
+
 const filteredPromotions = computed(() => {
   const query = search.value.trim().toLowerCase()
 
-  if (!query) return promotions.value
+  if (!query) return promotionRows.value
 
-  return promotions.value.filter((promotion) => getSearchText(promotion).includes(query))
+  return promotionRows.value.filter((row) => {
+    const original = promotions.value.find(
+      (promotion) => promotion.participantId === row.participantId,
+    )
+
+    if (!original) return false
+
+    return getSearchText(original).includes(query)
+  })
 })
+
+function getFormFallback(promotion: PromotionTableRow) {
+  return {
+    promotionType: promotion.promotionType,
+    reason: promotion.reason,
+    discountPercent: promotion.discountPercent,
+    used: promotion.used,
+    comment: promotion.comment,
+  }
+}
+
+function setPromotionType(promotion: PromotionTableRow, value: string) {
+  promotionForms[promotion.participantId] = {
+    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
+    promotionType: value,
+  }
+}
+
+function setReason(promotion: PromotionTableRow, value: string) {
+  promotionForms[promotion.participantId] = {
+    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
+    reason: value,
+  }
+}
+
+function setDiscountPercent(promotion: PromotionTableRow, value: number) {
+  promotionForms[promotion.participantId] = {
+    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
+    discountPercent: Number.isFinite(value) ? value : 0,
+  }
+}
+
+function setUsed(promotion: PromotionTableRow, value: number) {
+  promotionForms[promotion.participantId] = {
+    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
+    used: value,
+  }
+}
+
+function setComment(promotion: PromotionTableRow, value: string) {
+  promotionForms[promotion.participantId] = {
+    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
+    comment: value,
+  }
+}
+
+async function savePromotion(promotion: PromotionTableRow) {
+  savingPromotionId.value = promotion.participantId
+
+  await updatePromotion(promotion.participantId, {
+    promotionType: promotion.promotionType,
+    reason: promotion.reason || null,
+    discountPercent: promotion.discountPercent,
+    used: promotion.used,
+    comment: promotion.comment || null,
+  })
+
+  savingPromotionId.value = null
+}
 </script>
 
 <template>
@@ -89,7 +209,7 @@ const filteredPromotions = computed(() => {
           <h3 class="text-sm font-semibold tracking-tight text-slate-950">Список промо</h3>
 
           <p class="mt-1 text-xs text-slate-500">
-            Найдено {{ filteredPromotions.length }} из {{ promotions.length }} записей.
+            Найдено {{ filteredPromotions.length }} из {{ promotionRows.length }} записей.
           </p>
         </div>
 
@@ -117,7 +237,17 @@ const filteredPromotions = computed(() => {
         </button>
       </div>
 
-      <PromotionsTable v-else :promotions="filteredPromotions" />
+      <PromotionsTable
+        v-else
+        :promotions="filteredPromotions"
+        :saving-id="savingPromotionId"
+        @save="savePromotion"
+        @update-comment="setComment"
+        @update-discount="setDiscountPercent"
+        @update-reason="setReason"
+        @update-type="setPromotionType"
+        @update-used="setUsed"
+      />
     </UiCard>
   </div>
 </template>
