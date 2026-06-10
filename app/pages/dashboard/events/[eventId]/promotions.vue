@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PromotionTableRow } from '~/components/promotions/PromotionsTable.vue'
 import PromotionsTable from '~/components/promotions/PromotionsTable.vue'
-import type { PromotionRow } from '~/types/operations'
+import type { PromotionRow, UpdatePromotionDto } from '~/types/operations'
 
 definePageMeta({
   middleware: 'auth',
@@ -10,7 +10,6 @@ definePageMeta({
 
 const route = useRoute()
 const eventId = computed(() => String(route.params.eventId))
-
 const { events, isLoading: isEventsLoading, error: eventsError } = useEvents()
 
 const event = computed(() => {
@@ -21,7 +20,6 @@ const event = computed(() => {
 })
 
 const promotionsEventId = computed(() => event.value?.externalId ?? eventId.value)
-
 const {
   promotions,
   isLoading: isPromotionsLoading,
@@ -31,7 +29,6 @@ const {
 } = useEventPromotions(promotionsEventId)
 
 const search = ref('')
-const savingPromotionId = ref<string | null>(null)
 const promotionForms = reactive<
   Record<
     string,
@@ -56,9 +53,6 @@ useHead({
 function getSearchText(promotion: PromotionRow) {
   return [
     promotion.user.name,
-    promotion.user.email,
-    promotion.user.phone,
-    promotion.user.telegramId,
     promotion.user.badge,
     promotion.promotion?.promotionType,
     promotion.promotion?.reason,
@@ -97,6 +91,7 @@ const promotionRows = computed<PromotionTableRow[]>(() => {
 
     return {
       participantId: promotion.participantId,
+      badge: promotion.user.badge,
       nickname: getPlayerName(promotion),
       promotionType: form.promotionType,
       reason: form.reason,
@@ -123,85 +118,23 @@ const filteredPromotions = computed(() => {
   })
 })
 
-function getFormFallback(promotion: PromotionTableRow) {
-  return {
-    promotionType: promotion.promotionType,
-    reason: promotion.reason,
-    discountPercent: promotion.discountPercent,
-    used: promotion.used,
-    comment: promotion.comment,
+async function onChange(participantId: string, payload: UpdatePromotionDto) {
+  try {
+    await updatePromotion(participantId, payload)
+  } catch (error) {
+    console.log(error)
   }
-}
-
-function setPromotionType(promotion: PromotionTableRow, value: string) {
-  promotionForms[promotion.participantId] = {
-    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
-    promotionType: value,
-  }
-}
-
-function setReason(promotion: PromotionTableRow, value: string) {
-  promotionForms[promotion.participantId] = {
-    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
-    reason: value,
-  }
-}
-
-function setDiscountPercent(promotion: PromotionTableRow, value: number) {
-  promotionForms[promotion.participantId] = {
-    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
-    discountPercent: Number.isFinite(value) ? value : 0,
-  }
-}
-
-function setUsed(promotion: PromotionTableRow, value: number) {
-  promotionForms[promotion.participantId] = {
-    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
-    used: value,
-  }
-}
-
-function setComment(promotion: PromotionTableRow, value: string) {
-  promotionForms[promotion.participantId] = {
-    ...(promotionForms[promotion.participantId] ?? getFormFallback(promotion)),
-    comment: value,
-  }
-}
-
-async function savePromotion(promotion: PromotionTableRow) {
-  savingPromotionId.value = promotion.participantId
-
-  await updatePromotion(promotion.participantId, {
-    promotionType: promotion.promotionType,
-    reason: promotion.reason || null,
-    discountPercent: promotion.discountPercent,
-    used: promotion.used,
-    comment: promotion.comment || null,
-  })
-
-  savingPromotionId.value = null
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <p class="text-xs font-medium text-slate-500">Акции и скидки</p>
-
-          <span class="size-1 rounded-full bg-slate-300" />
-
-          <p class="text-xs text-slate-400">{{ eventTitle }}</p>
-        </div>
-
-        <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Промо игроков</h2>
-
-        <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Бесплатные входы, скидки, сертификаты, дилерство, 5-й визит и Ladies Day.
-        </p>
-      </div>
-    </div>
+    <SharedPageHeader
+      class="mb-4"
+      title="Промо игроков"
+      description="Бесплатные входы, скидки, сертификаты, дилерство, 5-й визит и Ladies Day."
+      :breadcrumbs="[{ label: 'Акции и скидки' }]"
+    />
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -237,17 +170,7 @@ async function savePromotion(promotion: PromotionTableRow) {
         </button>
       </div>
 
-      <PromotionsTable
-        v-else
-        :promotions="filteredPromotions"
-        :saving-id="savingPromotionId"
-        @save="savePromotion"
-        @update-comment="setComment"
-        @update-discount="setDiscountPercent"
-        @update-reason="setReason"
-        @update-type="setPromotionType"
-        @update-used="setUsed"
-      />
+      <PromotionsTable v-else :promotions="filteredPromotions" @change="onChange" />
     </UiCard>
   </div>
 </template>

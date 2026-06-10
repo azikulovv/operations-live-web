@@ -23,14 +23,14 @@ const emit = defineEmits<{
 }>()
 
 const columns: DataTableColumn[] = [
-  { key: 'badge', label: 'Badge', width: '90px' },
-  { key: 'nickname', label: 'Nickname', width: '180px' },
-  { key: 'tableNumber', label: 'Table', width: '90px' },
-  { key: 'seatNumber', label: 'Seat', width: '90px' },
-  { key: 'points', label: 'Points', align: 'right', width: '120px' },
-  { key: 'place', label: 'Place', align: 'right', width: '120px' },
-  { key: 'comment', label: 'Comment', width: '240px' },
-  { key: 'updatedAt', label: 'UpdatedAt', width: '160px' },
+  { key: 'badge', label: 'Бейдж', width: '90px' },
+  { key: 'nickname', label: 'Имя пользователя', width: '180px' },
+  { key: 'tableNumber', label: 'Стол', width: '90px' },
+  { key: 'seatNumber', label: 'Место', width: '90px' },
+  { key: 'points', label: 'Очки', align: 'right', width: '120px' },
+  { key: 'place', label: 'Позиция', align: 'right', width: '120px' },
+  { key: 'comment', label: 'Комментарий', width: '240px' },
+  { key: 'updatedAt', label: 'Обновлен', width: '160px' },
 ]
 </script>
 
@@ -91,7 +91,7 @@ const columns: DataTableColumn[] = [
 
     <template #cell-updatedAt="{ row }">
       <span class="whitespace-nowrap text-slate-500">
-        {{ (row as TournamentTableRow).updatedAt ?? '—' }}
+        {{ formatDate((row as TournamentTableRow).updatedAt) || '—' }}
       </span>
     </template>
   </UiDataTable>

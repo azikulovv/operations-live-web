@@ -46,21 +46,16 @@ async function onChange(participantId: string, payload: UpdateTournamentDto) {
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <p class="text-xs font-medium text-slate-500">Турнир</p>
-          <span class="size-1 rounded-full bg-slate-300" />
-          <p class="text-xs text-slate-400">{{ eventId }}</p>
-        </div>
-
-        <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Турнирная таблица</h2>
-
-        <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Очки, место, стол и комментарии участников турнира.
-        </p>
-      </div>
-    </div>
+    <SharedPageHeader
+      class="mb-4"
+      title="Турнирная таблица"
+      description="Очки, место, стол и комментарии участников турнира."
+      :breadcrumbs="[
+        {
+          label: 'Турнир',
+        },
+      ]"
+    />
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

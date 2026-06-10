@@ -31,13 +31,13 @@ defineProps<{
 const columns: DataTableColumn[] = [
   {
     key: 'badge',
-    label: 'Badge',
+    label: 'Бейдж',
     stickyLeft: '0px',
     width: '68px',
   },
   {
     key: 'nickname',
-    label: 'Nickname',
+    label: 'Имя пользователя',
     stickyLeft: '68px',
     width: '150px',
   },

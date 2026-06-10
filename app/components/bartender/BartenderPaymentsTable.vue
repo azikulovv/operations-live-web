@@ -23,27 +23,27 @@ const emit = defineEmits<{
 const columns: DataTableColumn[] = [
   {
     key: 'badge',
-    label: 'Badge',
+    label: 'Бейдж',
     width: '90px',
   },
   {
     key: 'nickname',
-    label: 'Nickname',
+    label: 'Имя пользователя',
     width: '180px',
   },
   {
     key: 'amount',
-    label: 'Amount',
+    label: 'Сумма',
     width: '140px',
   },
   {
     key: 'comment',
-    label: 'Comment',
+    label: 'Комментарий',
     width: '260px',
   },
   {
     key: 'updatedAt',
-    label: 'UpdatedAt',
+    label: 'Обновлен',
     width: '160px',
   },
 ]
@@ -98,7 +98,7 @@ const columns: DataTableColumn[] = [
 
     <template #cell-updatedAt="{ row }">
       <span class="whitespace-nowrap text-slate-500">
-        {{ (row as BartenderPayment).updatedAt }}
+        {{ formatDate((row as BartenderPayment).updatedAt) || '—' }}
       </span>
     </template>
   </UiDataTable>

@@ -11,11 +11,11 @@ const emit = defineEmits<{
 }>()
 
 const columns: DataTableColumn[] = [
-  { key: 'tableNumber', label: 'Table', width: '100px' },
-  { key: 'status', label: 'Status', width: '160px' },
-  { key: 'seats', label: 'Seats', width: '320px' },
-  { key: 'comment', label: 'Comment', width: '260px' },
-  { key: 'updatedAt', label: 'UpdatedAt', width: '160px' },
+  { key: 'tableNumber', label: 'Стол', width: '100px' },
+  { key: 'status', label: 'Статус', width: '160px' },
+  { key: 'seats', label: 'Места', width: '320px' },
+  { key: 'comment', label: 'Комментарий', width: '260px' },
+  { key: 'updatedAt', label: 'Обновлен', width: '160px' },
 ]
 
 function getSeatsText(table: EventTableRow) {
@@ -23,7 +23,7 @@ function getSeatsText(table: EventTableRow) {
 
   return table.seats
     .map((seat) => {
-      const player = seat.user?.badge ?? seat.user?.name ?? seat.participantId ?? 'empty'
+      const player = seat.user?.badge ?? seat.user?.name ?? seat.participantId ?? 'пусто'
       return `${seat.seatNumber}: ${player}`
     })
     .join(', ')
@@ -70,7 +70,7 @@ function getSeatsText(table: EventTableRow) {
 
     <template #cell-updatedAt="{ row }">
       <span class="whitespace-nowrap text-slate-500">
-        {{ (row as EventTableRow).updatedAt ?? '—' }}
+        {{ formatDate((row as EventTableRow).updatedAt) || '—' }}
       </span>
     </template>
   </UiDataTable>

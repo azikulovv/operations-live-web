@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import type { EventPromotionType } from '~/types/event'
+import type { UpdatePromotionDto } from '~/types/operations'
 
 export type PromotionTableRow = {
   participantId: string
+  badge: string | number | null
   nickname: string
   promotionType: EventPromotionType | string
   reason: string
@@ -14,59 +16,52 @@ export type PromotionTableRow = {
 
 type Props = {
   promotions: PromotionTableRow[]
-  savingId?: string | null
 }
 
 defineProps<Props>()
 
 const emit = defineEmits<{
-  save: [promotion: PromotionTableRow]
-  'update-type': [promotion: PromotionTableRow, value: EventPromotionType | string]
-  'update-reason': [promotion: PromotionTableRow, value: string]
-  'update-discount': [promotion: PromotionTableRow, value: number]
-  'update-used': [promotion: PromotionTableRow, value: number]
-  'update-comment': [promotion: PromotionTableRow, value: string]
+  change: [participantId: string, payload: UpdatePromotionDto]
 }>()
 
 const columns: DataTableColumn[] = [
   {
+    key: 'badge',
+    label: 'Бейдж',
+    width: '90px',
+  },
+  {
     key: 'nickname',
-    label: 'Nickname',
+    label: 'Имя пользователя',
     stickyLeft: '0px',
     width: '180px',
   },
   {
     key: 'type',
-    label: 'Promotion Type',
+    label: 'Тип промо',
     width: '150px',
   },
   {
     key: 'reason',
-    label: 'Reason',
+    label: 'Причина',
     width: '190px',
   },
   {
     key: 'discountPercent',
-    label: 'Discount %',
+    label: 'Скидка %',
     align: 'right',
     width: '110px',
     cellClass: 'font-semibold tabular-nums text-slate-950',
   },
   {
     key: 'used',
-    label: 'Used',
+    label: 'Использовано',
     width: '100px',
   },
   {
     key: 'comment',
     label: 'Комментарий',
     width: '260px',
-  },
-  {
-    key: 'actions',
-    label: '',
-    align: 'right',
-    width: '120px',
   },
 ]
 
@@ -93,6 +88,12 @@ function isPromotionUsed(promotion: PromotionTableRow) {
     min-width="1050px"
     empty-text="Акции не найдены"
   >
+    <template #cell-badge="{ row }">
+      <span class="font-semibold text-slate-950">
+        {{ (row as PromotionTableRow).badge ?? '—' }}
+      </span>
+    </template>
+
     <template #cell-nickname="{ row }">
       <div class="max-w-40 truncate font-medium text-slate-950">
         {{ (row as PromotionTableRow).nickname }}
@@ -105,11 +106,9 @@ function isPromotionUsed(promotion: PromotionTableRow) {
           :value="(row as PromotionTableRow).promotionType"
           class="h-8 min-w-28 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
           @change="
-            emit(
-              'update-type',
-              row as PromotionTableRow,
-              ($event.target as HTMLSelectElement).value,
-            )
+            emit('change', (row as PromotionTableRow).participantId, {
+              promotionType: ($event.target as HTMLSelectElement).value,
+            })
           "
         >
           <option v-for="option in promotionTypeOptions" :key="option.value" :value="option.value">
@@ -127,11 +126,9 @@ function isPromotionUsed(promotion: PromotionTableRow) {
         max="100"
         class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
         @input="
-          emit(
-            'update-discount',
-            row as PromotionTableRow,
-            Number(($event.target as HTMLInputElement).value),
-          )
+          emit('change', (row as PromotionTableRow).participantId, {
+            discountPercent: Number(($event.target as HTMLInputElement).value),
+          })
         "
       />
     </template>
@@ -141,9 +138,11 @@ function isPromotionUsed(promotion: PromotionTableRow) {
         :value="(row as PromotionTableRow).reason"
         type="text"
         class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        placeholder="Reason"
+        placeholder="Причина"
         @input="
-          emit('update-reason', row as PromotionTableRow, ($event.target as HTMLInputElement).value)
+          emit('change', (row as PromotionTableRow).participantId, {
+            reason: ($event.target as HTMLInputElement).value || null,
+          })
         "
       />
     </template>
@@ -157,11 +156,9 @@ function isPromotionUsed(promotion: PromotionTableRow) {
           max="100"
           class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
           @change="
-            emit(
-              'update-used',
-              row as PromotionTableRow,
-              Number(($event.target as HTMLInputElement).value),
-            )
+            emit('change', (row as PromotionTableRow).participantId, {
+              used: Number(($event.target as HTMLInputElement).value),
+            })
           "
         />
       </label>
@@ -174,24 +171,11 @@ function isPromotionUsed(promotion: PromotionTableRow) {
         class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
         placeholder="Комментарий"
         @input="
-          emit(
-            'update-comment',
-            row as PromotionTableRow,
-            ($event.target as HTMLInputElement).value,
-          )
+          emit('change', (row as PromotionTableRow).participantId, {
+            comment: ($event.target as HTMLInputElement).value || null,
+          })
         "
       />
-    </template>
-
-    <template #cell-actions="{ row }">
-      <button
-        type="button"
-        class="h-8 rounded-lg bg-slate-950 px-3 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-        :disabled="savingId === (row as PromotionTableRow).participantId"
-        @click="emit('save', row as PromotionTableRow)"
-      >
-        {{ savingId === (row as PromotionTableRow).participantId ? '...' : 'Сохранить' }}
-      </button>
     </template>
   </UiDataTable>
 </template>

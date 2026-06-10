@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
+import type { PaymentStatus as ApiPaymentStatus, UpdatePaymentDto } from '~/types/operations'
 
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
 export type CashierVisit = {
@@ -18,27 +19,23 @@ export type CashierVisit = {
 
 defineProps<{
   visits: CashierVisit[]
-  savingId?: string | null
 }>()
 
 const emit = defineEmits<{
-  save: [visit: CashierVisit]
-  'update-total': [visit: CashierVisit, value: number]
-  'update-comment': [visit: CashierVisit, value: string]
-  'update-paid': [visit: CashierVisit, value: number]
+  change: [participantId: string, payload: UpdatePaymentDto]
 }>()
 
 const columns: DataTableColumn[] = [
   {
     key: 'badge',
-    label: 'Badge',
+    label: 'Бейдж',
     sticky: true,
     stickyLeft: '0px',
     width: '68px',
   },
   {
     key: 'nickname',
-    label: 'Nickname',
+    label: 'Имя пользователя',
     sticky: true,
     stickyLeft: '68px',
     width: '150px',
@@ -86,12 +83,6 @@ const columns: DataTableColumn[] = [
     label: 'Комментарий',
     width: '220px',
   },
-  {
-    key: 'actions',
-    label: '',
-    align: 'right',
-    width: '120px',
-  },
 ]
 
 function formatMoney(value: number) {
@@ -116,6 +107,24 @@ function getPaymentStatusClass(status: PaymentStatus) {
   }
 
   return classes[status]
+}
+
+function getApiPaymentStatus(payableAmount: number, paidAmount: number): ApiPaymentStatus {
+  if (payableAmount <= 0) return 'PAID'
+  if (paidAmount >= payableAmount) return 'PAID'
+  if (paidAmount <= 0) return 'UNPAID'
+
+  return 'PARTIALLY_PAID'
+}
+
+function getPayableAmount(totalAmount: number, discountPercent: number) {
+  const discountAmount = totalAmount * (discountPercent / 100)
+
+  return Math.max(totalAmount - discountAmount, 0)
+}
+
+function getFiniteNumber(value: number) {
+  return Number.isFinite(value) ? value : 0
 }
 </script>
 
@@ -155,9 +164,23 @@ function getPaymentStatusClass(status: PaymentStatus) {
         class="h-8 w-24 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
         @input="
           emit(
-            'update-total',
-            row as CashierVisit,
-            Number(($event.target as HTMLInputElement).value),
+            'change',
+            (row as CashierVisit).participantId,
+            (() => {
+              const accruedAmount = getFiniteNumber(
+                Number(($event.target as HTMLInputElement).value),
+              )
+              const toPayAmount = getPayableAmount(
+                accruedAmount,
+                (row as CashierVisit).discountAmount,
+              )
+
+              return {
+                accruedAmount,
+                toPayAmount,
+                status: getApiPaymentStatus(toPayAmount, (row as CashierVisit).paidAmount),
+              }
+            })(),
           )
         "
       />
@@ -185,9 +208,16 @@ function getPaymentStatusClass(status: PaymentStatus) {
         class="h-8 w-24 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
         @input="
           emit(
-            'update-paid',
-            row as CashierVisit,
-            Number(($event.target as HTMLInputElement).value),
+            'change',
+            (row as CashierVisit).participantId,
+            (() => {
+              const paidAmount = getFiniteNumber(Number(($event.target as HTMLInputElement).value))
+
+              return {
+                paidAmount,
+                status: getApiPaymentStatus((row as CashierVisit).payableAmount, paidAmount),
+              }
+            })(),
           )
         "
       />
@@ -209,20 +239,11 @@ function getPaymentStatusClass(status: PaymentStatus) {
         class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
         placeholder="Комментарий"
         @input="
-          emit('update-comment', row as CashierVisit, ($event.target as HTMLInputElement).value)
+          emit('change', (row as CashierVisit).participantId, {
+            comment: ($event.target as HTMLInputElement).value || null,
+          })
         "
       />
-    </template>
-
-    <template #cell-actions="{ row }">
-      <button
-        type="button"
-        class="h-8 rounded-lg bg-slate-950 px-3 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-        :disabled="savingId === (row as CashierVisit).participantId"
-        @click="emit('save', row as CashierVisit)"
-      >
-        {{ savingId === (row as CashierVisit).participantId ? '...' : 'Сохранить' }}
-      </button>
     </template>
   </UiDataTable>
 </template>

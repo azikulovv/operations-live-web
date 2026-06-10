@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CashierVisit } from '~/components/cashier/CashierVisitsTable.vue'
 import CashierVisitsTable from '~/components/cashier/CashierVisitsTable.vue'
-import type { PaymentRow, PaymentStatus } from '~/types/operations'
+import type { PaymentRow, UpdatePaymentDto } from '~/types/operations'
 
 definePageMeta({
   middleware: 'auth',
@@ -21,7 +21,6 @@ const event = computed(() => {
 })
 
 const paymentsEventId = computed(() => event.value?.externalId ?? eventId.value)
-const { dashboard, pending: dashboardPending } = useShiftDashboard(paymentsEventId)
 
 const {
   payments,
@@ -32,10 +31,6 @@ const {
 } = useEventPayments(paymentsEventId)
 
 const search = ref('')
-const savingPaymentId = ref<string | null>(null)
-const paymentForms = reactive<
-  Record<string, { comment: string; paidAmount: number; totalAmount: number }>
->({})
 
 const eventTitle = computed(() => event.value?.title || eventId.value)
 const isLoading = computed(() => isEventsLoading.value || isPaymentsLoading.value)
@@ -52,40 +47,18 @@ function mapPaymentStatus(status: string | undefined): CashierVisit['paymentStat
   return 'unpaid'
 }
 
-function getPaymentStatus(visit: CashierVisit): PaymentStatus {
-  if (visit.payableAmount <= 0) return 'PAID'
-  if (visit.paidAmount >= visit.payableAmount) return 'PAID'
-  if (visit.paidAmount <= 0) return 'UNPAID'
-
-  return 'PARTIALLY_PAID'
-}
-
 function getPlayerName(payment: PaymentRow) {
   return payment.user.name || payment.user.email || '—'
 }
 
-function getForm(payment: PaymentRow) {
-  const existing = paymentForms[payment.participantId]
-
-  if (existing) return existing
-
-  const form = {
-    totalAmount: payment.payment?.accruedAmount ?? 0,
-    paidAmount: payment.payment?.paidAmount ?? 0,
-    comment: payment.payment?.comment ?? '',
-  }
-
-  paymentForms[payment.participantId] = form
-
-  return form
-}
-
 const visits = computed<CashierVisit[]>(() => {
   return payments.value.map((payment) => {
-    const form = getForm(payment)
+    const totalAmount = payment.payment?.accruedAmount ?? 0
+    const paidAmount = payment.payment?.paidAmount ?? 0
+    const comment = payment.payment?.comment ?? ''
     const discountPercent = payment.promotion?.discountPercent ?? 0
-    const discountAmount = form.totalAmount * (discountPercent / 100)
-    const payableAmount = Math.max(form.totalAmount - discountAmount, 0)
+    const discountAmount = totalAmount * (discountPercent / 100)
+    const payableAmount = Math.max(totalAmount - discountAmount, 0)
 
     return {
       id: payment.payment?.id ?? payment.participantId,
@@ -93,12 +66,12 @@ const visits = computed<CashierVisit[]>(() => {
       badge: payment.user.badge ?? payment.position ?? 0,
       nickname: getPlayerName(payment),
       tournament: eventTitle.value,
-      totalAmount: form.totalAmount,
+      totalAmount,
       discountAmount: payment.promotion?.discountPercent ?? 0,
       payableAmount: payableAmount,
-      paidAmount: form.paidAmount,
+      paidAmount,
       paymentStatus: mapPaymentStatus(payment.payment?.status),
-      comment: form.comment,
+      comment,
     }
   })
 })
@@ -117,72 +90,27 @@ const filteredVisits = computed(() => {
   })
 })
 
-function setPaidAmount(visit: CashierVisit, value: number) {
-  paymentForms[visit.participantId] = {
-    ...(paymentForms[visit.participantId] ?? {
-      comment: visit.comment,
-      totalAmount: visit.totalAmount,
-    }),
-    paidAmount: Number.isFinite(value) ? value : 0,
+async function onChange(participantId: string, payload: UpdatePaymentDto) {
+  try {
+    await updatePayment(participantId, payload)
+  } catch (error) {
+    console.log(error)
   }
-}
-
-function setTotalAmount(visit: CashierVisit, value: number) {
-  paymentForms[visit.participantId] = {
-    ...(paymentForms[visit.participantId] ?? {
-      comment: visit.comment,
-      paidAmount: visit.paidAmount,
-    }),
-    totalAmount: Number.isFinite(value) ? value : 0,
-  }
-}
-
-function setComment(visit: CashierVisit, value: string) {
-  paymentForms[visit.participantId] = {
-    ...(paymentForms[visit.participantId] ?? {
-      paidAmount: visit.paidAmount,
-      totalAmount: visit.totalAmount,
-    }),
-    comment: value,
-  }
-}
-
-async function savePayment(visit: CashierVisit) {
-  savingPaymentId.value = visit.participantId
-
-  await updatePayment(visit.participantId, {
-    accruedAmount: visit.totalAmount,
-    toPayAmount: visit.payableAmount,
-    paidAmount: visit.paidAmount,
-    status: getPaymentStatus(visit),
-    comment: visit.comment || null,
-  })
-
-  savingPaymentId.value = null
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <p class="text-xs font-medium text-slate-500">Касса</p>
-
-          <span class="size-1 rounded-full bg-slate-300" />
-
-          <p class="text-xs text-slate-400">{{ eventTitle }}</p>
-        </div>
-
-        <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Оплата игроков</h2>
-
-        <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Проверка начислений, фиксация оплаты и контроль долга.
-        </p>
-      </div>
-    </div>
-
-    <ShiftDashboardSummary :dashboard="dashboard" :pending="dashboardPending" />
+    <SharedPageHeader
+      class="mb-4"
+      title="Оплата игроков"
+      description="Проверка начислений, фиксация оплаты и контроль долга."
+      :breadcrumbs="[
+        {
+          label: 'Касса',
+        },
+      ]"
+    />
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -218,15 +146,7 @@ async function savePayment(visit: CashierVisit) {
         </button>
       </div>
 
-      <CashierVisitsTable
-        v-else
-        :visits="filteredVisits"
-        :saving-id="savingPaymentId"
-        @save="savePayment"
-        @update-comment="setComment"
-        @update-paid="setPaidAmount"
-        @update-total="setTotalAmount"
-      />
+      <CashierVisitsTable v-else :visits="filteredVisits" @change="onChange" />
     </UiCard>
   </div>
 </template>

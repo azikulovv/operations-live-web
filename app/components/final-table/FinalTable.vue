@@ -21,12 +21,12 @@ const emit = defineEmits<{
 }>()
 
 const columns: DataTableColumn[] = [
-  { key: 'badge', label: 'Badge', width: '90px' },
-  { key: 'nickname', label: 'Nickname', width: '180px' },
-  { key: 'place', label: 'Place', align: 'right', width: '120px' },
-  { key: 'prizeAmount', label: 'Prize', align: 'right', width: '140px' },
-  { key: 'comment', label: 'Comment', width: '260px' },
-  { key: 'updatedAt', label: 'UpdatedAt', width: '160px' },
+  { key: 'badge', label: 'Бейдж', width: '90px' },
+  { key: 'nickname', label: 'Имя пользователя', width: '180px' },
+  { key: 'place', label: 'Место', align: 'right', width: '120px' },
+  { key: 'prizeAmount', label: 'Приз', align: 'right', width: '140px' },
+  { key: 'comment', label: 'Комментарий', width: '260px' },
+  { key: 'updatedAt', label: 'Обновлен', width: '160px' },
 ]
 </script>
 
@@ -89,7 +89,7 @@ const columns: DataTableColumn[] = [
 
     <template #cell-updatedAt="{ row }">
       <span class="whitespace-nowrap text-slate-500">
-        {{ (row as FinalTablePlayerRow).updatedAt ?? '—' }}
+        {{ formatDate((row as FinalTablePlayerRow).updatedAt) || '—' }}
       </span>
     </template>
   </UiDataTable>

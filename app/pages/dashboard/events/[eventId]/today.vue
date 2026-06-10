@@ -176,30 +176,16 @@ onBeforeUnmount(() => {
 <template>
   <div class="mx-auto max-w-7xl">
     <template v-if="event || isEventsLoading">
-      <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <UiBreadcrumb
-            :items="[
-              { label: 'Сегодня' },
-              { label: eventTitle },
-              { label: formatDateTime(event?.startsAt) },
-            ]"
-          />
-
-          <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Хостес</h2>
-
-          <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-            Регистрации, Badge, статусы, начисления и закрытие визита.
-          </p>
-        </div>
-
-        <!-- <button
-          type="button"
-          class="h-9 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-slate-800"
-        >
-          Добавить игрока
-        </button> -->
-      </div>
+      <SharedPageHeader
+        class="mb-4"
+        title="Хостес"
+        description="Регистрации, бейджи, статусы, начисления и закрытие визита."
+        :breadcrumbs="[
+          { label: 'Сегодня' },
+          { label: eventTitle },
+          { label: formatDateTime(event?.startsAt) },
+        ]"
+      />
 
       <UiCard>
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -212,7 +198,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="w-full md:w-72">
-            <UiSearchInput v-model="search" placeholder="Поиск: Badge, Nickname" />
+            <UiSearchInput v-model="search" placeholder="Поиск: бейдж, имя пользователя" />
           </div>
         </div>
 

@@ -10,7 +10,6 @@ const route = useRoute()
 const eventId = String(route.params.eventId)
 
 const { rows, pending, error, updateSale, fetchList } = useBartenderSales(eventId)
-const { dashboard, pending: dashboardPending } = useShiftDashboard(eventId)
 
 async function onChange(participantId: string, payload: UpdateBartenderSaleDto) {
   try {
@@ -23,25 +22,16 @@ async function onChange(participantId: string, payload: UpdateBartenderSaleDto) 
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <p class="text-xs font-medium text-slate-500">Бар</p>
-
-          <span class="size-1 rounded-full bg-slate-300" />
-
-          <!-- <p class="text-xs text-slate-400">{{ eventTitle }} · {{ event?.startsAt }}</p> -->
-        </div>
-
-        <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Бармен</h2>
-
-        <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Учет оплат по бару: Badge, Nickname, сумма, комментарий и время создания записи.
-        </p>
-      </div>
-    </div>
-
-    <ShiftDashboardSummary :dashboard="dashboard" :pending="dashboardPending" />
+    <SharedPageHeader
+      class="mb-4"
+      title="Бармен"
+      description="Учет оплат по бару: бейдж, имя пользователя, сумма, комментарий и время обновления."
+      :breadcrumbs="[
+        {
+          label: 'Бар',
+        },
+      ]"
+    />
 
     <UiCard>
       <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -50,10 +40,6 @@ async function onChange(participantId: string, payload: UpdateBartenderSaleDto) 
 
           <p class="mt-1 text-xs text-slate-500">{{ rows.length }} записей по бару на событие.</p>
         </div>
-
-        <!-- <div class="w-full md:w-72">
-          <UiSearchInput v-model="search" placeholder="Поиск: Badge, Nickname, Comment" />
-        </div> -->
       </div>
 
       <div v-if="pending" class="space-y-3">
@@ -90,18 +76,5 @@ async function onChange(participantId: string, payload: UpdateBartenderSaleDto) 
         @change="onChange"
       />
     </UiCard>
-
-    <!-- <UiCard v-else>
-      <p class="text-sm font-semibold text-slate-950">Событие не найдено</p>
-
-      <p class="mt-1 text-xs text-slate-500">Возможно, событие было удалено или ссылка устарела.</p>
-
-      <NuxtLink
-        to="/dashboard/events"
-        class="mt-4 inline-flex h-9 items-center rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white"
-      >
-        Вернуться к событиям
-      </NuxtLink>
-    </UiCard> -->
   </div>
 </template>
