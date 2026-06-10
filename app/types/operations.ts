@@ -145,6 +145,7 @@ export type TableSeat = {
 
 export type EventTableRow = {
   tableNumber: number
+  playersCount?: number | null
   status?: string | null
   comment?: string | null
   seats?: TableSeat[]
@@ -153,6 +154,8 @@ export type EventTableRow = {
 }
 
 export type UpdateEventTableDto = Partial<{
+  tableNumber: number
+  playersCount: number
   status: string | null
   comment: string | null
 }>

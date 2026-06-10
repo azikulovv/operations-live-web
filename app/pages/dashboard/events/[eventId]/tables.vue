@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EventTablesTable from '~/components/tables/EventTablesTable.vue'
 import type { UpdateEventTableDto } from '~/types/operations'
 
 definePageMeta({
