@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import type { UpdateTournamentDto } from '~/types/operations'
+import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type TournamentTableRow = {
   participantId: string
   badge: number | string | null
   nickname: string | null
-  tableNumber: number | null
-  seatNumber: number | null
-  points: number
-  place: number | null
-  comment: string | null
+  reEntry: number
+  addon: number
+  knockouts: number
+  bustoutOrder: number
+  status: string
   updatedAt: string | null
 }
 
@@ -25,13 +26,15 @@ const emit = defineEmits<{
 const columns: DataTableColumn[] = [
   { key: 'badge', label: 'Бейдж', width: '90px' },
   { key: 'nickname', label: 'Имя пользователя', width: '180px' },
-  { key: 'tableNumber', label: 'Стол', width: '90px' },
-  { key: 'seatNumber', label: 'Место', width: '90px' },
-  { key: 'points', label: 'Очки', align: 'right', width: '120px' },
-  { key: 'place', label: 'Позиция', align: 'right', width: '120px' },
-  { key: 'comment', label: 'Комментарий', width: '240px' },
+  { key: 'reEntry', label: 'Re-entry', align: 'right', width: '120px' },
+  { key: 'addon', label: 'Addon', align: 'right', width: '120px' },
+  { key: 'knockouts', label: 'Knockouts', align: 'right', width: '120px' },
+  { key: 'bustoutOrder', label: 'Bustout order', align: 'right', width: '140px' },
+  { key: 'status', label: 'Статус', width: '150px' },
   { key: 'updatedAt', label: 'Обновлен', width: '160px' },
 ]
+
+const statusOptions = ['ACTIVE', 'BUSTED', 'FINISHED']
 </script>
 
 <template>
@@ -52,41 +55,74 @@ const columns: DataTableColumn[] = [
       <span class="text-slate-700">{{ (row as TournamentTableRow).nickname ?? '—' }}</span>
     </template>
 
-    <template #cell-points="{ row }">
+    <template #cell-reEntry="{ row }">
       <EditableCellInput
-        :model-value="(row as TournamentTableRow).points"
-        type="number"
-        inputmode="numeric"
-        class="w-24 text-right"
-        @update:model-value="
-          emit('change', (row as TournamentTableRow).participantId, { points: Number($event) })
-        "
-      />
-    </template>
-
-    <template #cell-place="{ row }">
-      <EditableCellInput
-        :model-value="(row as TournamentTableRow).place ?? ''"
+        :model-value="(row as TournamentTableRow).reEntry"
         type="number"
         inputmode="numeric"
         class="w-24 text-right"
         @update:model-value="
           emit('change', (row as TournamentTableRow).participantId, {
-            place: Number($event) || null,
+            reEntry: Number($event),
           })
         "
       />
     </template>
 
-    <template #cell-comment="{ row }">
+    <template #cell-addon="{ row }">
       <EditableCellInput
-        :model-value="(row as TournamentTableRow).comment ?? ''"
-        type="text"
-        class="w-60"
+        :model-value="(row as TournamentTableRow).addon"
+        type="number"
+        inputmode="numeric"
+        class="w-24 text-right"
         @update:model-value="
-          emit('change', (row as TournamentTableRow).participantId, { comment: String($event) })
+          emit('change', (row as TournamentTableRow).participantId, {
+            addon: Number($event),
+          })
         "
       />
+    </template>
+
+    <template #cell-knockouts="{ row }">
+      <EditableCellInput
+        :model-value="(row as TournamentTableRow).knockouts"
+        type="number"
+        inputmode="numeric"
+        class="w-24 text-right"
+        @update:model-value="
+          emit('change', (row as TournamentTableRow).participantId, { knockouts: Number($event) })
+        "
+      />
+    </template>
+
+    <template #cell-bustoutOrder="{ row }">
+      <EditableCellInput
+        :model-value="(row as TournamentTableRow).bustoutOrder"
+        type="number"
+        inputmode="numeric"
+        class="w-24 text-right"
+        @update:model-value="
+          emit('change', (row as TournamentTableRow).participantId, {
+            bustoutOrder: Number($event),
+          })
+        "
+      />
+    </template>
+
+    <template #cell-status="{ row }">
+      <select
+        :value="(row as TournamentTableRow).status"
+        class="h-8 w-32 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @change="
+          emit('change', (row as TournamentTableRow).participantId, {
+            status: ($event.target as HTMLSelectElement).value,
+          })
+        "
+      >
+        <option v-for="status in statusOptions" :key="status" :value="status">
+          {{ status }}
+        </option>
+      </select>
     </template>
 
     <template #cell-updatedAt="{ row }">

@@ -107,16 +107,20 @@ export type UpdateDebtDto = Partial<{
 
 export type TournamentRow = OperationParticipantRow & {
   tournament: NullableModuleRecord & {
-    points: number
-    place: number | null
-    comment: string | null
+    reEntry: number
+    addon: number
+    knockouts: number
+    bustoutOrder: number
+    status: string
   }
 }
 
 export type UpdateTournamentDto = Partial<{
-  points: number
-  place: number | null
-  comment: string | null
+  reEntry: number
+  addon: number
+  knockouts: number
+  bustoutOrder: number
+  status: string
 }>
 
 export type FinalTableRow = OperationParticipantRow & {

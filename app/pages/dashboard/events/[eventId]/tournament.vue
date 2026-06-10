@@ -17,11 +17,11 @@ const tableRows = computed(() =>
     participantId: row.participantId,
     badge: row.user.badge,
     nickname: row.user.name || row.user.email,
-    tableNumber: row.tableNumber,
-    seatNumber: row.seatNumber,
-    points: row.tournament.points,
-    place: row.tournament.place,
-    comment: row.tournament.comment,
+    reEntry: row.tournament.reEntry,
+    addon: row.tournament.addon,
+    knockouts: row.tournament.knockouts,
+    bustoutOrder: row.tournament.bustoutOrder,
+    status: row.tournament.status,
     updatedAt: row.tournament.updatedAt,
   })),
 )
@@ -31,7 +31,7 @@ const filteredRows = computed(() => {
   if (!query) return tableRows.value
 
   return tableRows.value.filter((row) =>
-    [row.badge, row.nickname, row.comment].filter(Boolean).join(' ').toLowerCase().includes(query),
+    [row.badge, row.nickname, row.status].filter(Boolean).join(' ').toLowerCase().includes(query),
   )
 })
 
@@ -49,7 +49,7 @@ async function onChange(participantId: string, payload: UpdateTournamentDto) {
     <SharedPageHeader
       class="mb-4"
       title="Турнирная таблица"
-      description="Очки, место, стол и комментарии участников турнира."
+      description="Re-entry, addon, knockouts, порядок вылета и статус участников турнира."
       :breadcrumbs="[
         {
           label: 'Турнир',
@@ -67,7 +67,7 @@ async function onChange(participantId: string, payload: UpdateTournamentDto) {
         </div>
 
         <div class="w-full md:w-72">
-          <UiSearchInput v-model="search" placeholder="Поиск: Badge, Nickname, Comment" />
+          <UiSearchInput v-model="search" placeholder="Поиск: бейдж, имя пользователя, статус" />
         </div>
       </div>
 
