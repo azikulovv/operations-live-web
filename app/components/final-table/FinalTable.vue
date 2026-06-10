@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import type { UpdateFinalTableDto } from '~/types/operations'
+import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type FinalTablePlayerRow = {
+  id: string
   participantId: string
-  badge: number | string | null
+  seat: number | null
+  badge: string | number | null
   nickname: string | null
-  place: number | null
-  prizeAmount: number
-  comment: string | null
+  stack: number
   updatedAt: string | null
 }
 
@@ -23,24 +24,53 @@ const emit = defineEmits<{
 const columns: DataTableColumn[] = [
   { key: 'badge', label: 'Бейдж', width: '90px' },
   { key: 'nickname', label: 'Имя пользователя', width: '180px' },
-  { key: 'place', label: 'Место', align: 'right', width: '120px' },
-  { key: 'prizeAmount', label: 'Приз', align: 'right', width: '140px' },
-  { key: 'comment', label: 'Комментарий', width: '260px' },
+  { key: 'seat', label: 'Место', align: 'right', width: '110px' },
+  { key: 'stack', label: 'Стек', align: 'right', width: '140px' },
   { key: 'updatedAt', label: 'Обновлен', width: '160px' },
 ]
+
+function getSeat(value: string | number | null) {
+  const seat = Number(value)
+
+  if (!Number.isFinite(seat)) return 1
+
+  return Math.min(Math.max(seat, 1), 9)
+}
+
+function getStack(value: string | number) {
+  const stack = Number(value)
+
+  if (!Number.isFinite(stack)) return 0
+
+  return stack
+}
+
+function onSeatChange(row: FinalTablePlayerRow, value: string | number) {
+  emit('change', row.participantId, {
+    seat: getSeat(value),
+    stack: getStack(row.stack),
+  })
+}
+
+function onStackChange(row: FinalTablePlayerRow, value: string | number) {
+  emit('change', row.participantId, {
+    seat: getSeat(row.seat),
+    stack: getStack(value),
+  })
+}
 </script>
 
 <template>
   <UiDataTable
     :columns="columns"
     :rows="players"
-    row-key="participantId"
-    min-width="950px"
+    row-key="id"
+    min-width="760px"
     empty-text="Финальный стол пуст"
   >
     <template #cell-badge="{ row }">
       <span class="font-semibold text-slate-950">{{
-        (row as FinalTablePlayerRow).badge ?? '—'
+        (row as FinalTablePlayerRow)?.badge ?? '—'
       }}</span>
     </template>
 
@@ -48,42 +78,26 @@ const columns: DataTableColumn[] = [
       <span class="text-slate-700">{{ (row as FinalTablePlayerRow).nickname ?? '—' }}</span>
     </template>
 
-    <template #cell-place="{ row }">
+    <template #cell-seat="{ row }">
       <EditableCellInput
-        :model-value="(row as FinalTablePlayerRow).place ?? ''"
+        :model-value="(row as FinalTablePlayerRow).seat ?? ''"
         type="number"
         inputmode="numeric"
-        class="w-24 text-right"
-        @update:model-value="
-          emit('change', (row as FinalTablePlayerRow).participantId, {
-            place: Number($event) || null,
-          })
-        "
+        min="1"
+        max="9"
+        class="w-20 text-right"
+        @update:model-value="onSeatChange(row as FinalTablePlayerRow, $event)"
       />
     </template>
 
-    <template #cell-prizeAmount="{ row }">
+    <template #cell-stack="{ row }">
       <EditableCellInput
-        :model-value="(row as FinalTablePlayerRow).prizeAmount"
+        :model-value="(row as FinalTablePlayerRow).stack"
         type="number"
         inputmode="numeric"
+        min="0"
         class="w-28 text-right"
-        @update:model-value="
-          emit('change', (row as FinalTablePlayerRow).participantId, {
-            prizeAmount: Number($event),
-          })
-        "
-      />
-    </template>
-
-    <template #cell-comment="{ row }">
-      <EditableCellInput
-        :model-value="(row as FinalTablePlayerRow).comment ?? ''"
-        type="text"
-        class="w-65"
-        @update:model-value="
-          emit('change', (row as FinalTablePlayerRow).participantId, { comment: String($event) })
-        "
+        @update:model-value="onStackChange(row as FinalTablePlayerRow, $event)"
       />
     </template>
 

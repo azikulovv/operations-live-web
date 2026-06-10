@@ -12,24 +12,16 @@ const search = ref('')
 
 const { rows, pending, error, fetchList, updateFinalTable } = useFinalTable(eventId)
 
-const tableRows = computed(() =>
-  rows.value.map((row) => ({
-    participantId: row.participantId,
-    badge: row.user.badge,
-    nickname: row.user.name || row.user.email,
-    place: row.finalTable.place,
-    prizeAmount: row.finalTable.prizeAmount,
-    comment: row.finalTable.comment,
-    updatedAt: row.finalTable.updatedAt,
-  })),
-)
-
 const filteredRows = computed(() => {
   const query = search.value.trim().toLowerCase()
-  if (!query) return tableRows.value
+  if (!query) return rows.value
 
-  return tableRows.value.filter((row) =>
-    [row.badge, row.nickname, row.comment].filter(Boolean).join(' ').toLowerCase().includes(query),
+  return rows.value.filter((row) =>
+    [row.seat, row.badge, row.nickname, row.stack]
+      .filter((value) => value !== null && value !== undefined)
+      .join(' ')
+      .toLowerCase()
+      .includes(query),
   )
 })
 
@@ -47,7 +39,7 @@ async function onChange(participantId: string, payload: UpdateFinalTableDto) {
     <SharedPageHeader
       class="mb-4"
       title="Финальный стол"
-      description="Места, призовые и комментарии финалистов."
+      description="Места, бейджи, имена игроков и стек на финальном столе."
       :breadcrumbs="[
         {
           label: 'Финальный стол',
@@ -60,12 +52,12 @@ async function onChange(participantId: string, payload: UpdateFinalTableDto) {
         <div>
           <h3 class="text-sm font-semibold tracking-tight text-slate-950">Финалисты</h3>
           <p class="mt-1 text-xs text-slate-500">
-            Найдено {{ filteredRows.length }} из {{ tableRows.length }} записей.
+            Найдено {{ filteredRows.length }} из {{ rows.length }} записей.
           </p>
         </div>
 
         <div class="w-full md:w-72">
-          <UiSearchInput v-model="search" placeholder="Поиск: Badge, Nickname, Comment" />
+          <UiSearchInput v-model="search" placeholder="Поиск: место, бейдж, имя, стек" />
         </div>
       </div>
 

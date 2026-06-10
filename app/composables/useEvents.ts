@@ -1,5 +1,4 @@
 import type { Ref } from 'vue'
-import { getMockEvents } from '~/mocks/event.mock'
 import { useEventsApi } from '~/services/event.api'
 import type { EventFilterStatus, EventItem } from '~/types/event'
 
@@ -27,7 +26,6 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     fetchItems,
   } = useAsyncList<EventItem>({
     load: api.getEvents,
-    fallback: getMockEvents,
     errorMessage: 'Не удалось загрузить события. Попробуйте обновить страницу.',
   })
 

@@ -123,18 +123,21 @@ export type UpdateTournamentDto = Partial<{
   status: string
 }>
 
-export type FinalTableRow = OperationParticipantRow & {
-  finalTable: NullableModuleRecord & {
-    place: number | null
-    prizeAmount: number
-    comment: string | null
-  }
+export type FinalTableRow = {
+  id: string
+  participantId: string
+  externalParticipantId: string
+  externalUserId: string
+  seat: number | null
+  badge: string | number | null
+  nickname: string | null
+  stack: number
+  updatedAt: string | null
 }
 
 export type UpdateFinalTableDto = Partial<{
-  place: number | null
-  prizeAmount: number
-  comment: string | null
+  seat: number | null
+  stack: number
 }>
 
 export type TableSeat = {
