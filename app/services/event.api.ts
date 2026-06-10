@@ -51,8 +51,12 @@ export function useEventsApi() {
     })
   }
 
-  function updateEventParticipant(participantId: string, body: UpdateEventParticipantPayload) {
-    return api<ApiResponse<EventParticipant>>(`/events/participants/${participantId}`, {
+  function updateEventParticipant(
+    eventId: string,
+    participantId: string,
+    body: UpdateEventParticipantPayload,
+  ) {
+    return api<ApiResponse<EventParticipant>>(`/events/${eventId}/participants/${participantId}`, {
       method: 'PATCH',
       body,
     })

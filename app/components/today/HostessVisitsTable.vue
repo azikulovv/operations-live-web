@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import UiDataTable from '~/components/ui/UiDataTable.vue'
+import type { UpdateEventParticipantPayload } from '~/types/event'
+import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type VisitStatus = 'registered' | 'in_tournament' | 'completed'
 export type VisitSource = 'app' | 'manual'
 
 export type HostessVisit = {
   id: string
-  badge: number
+  badge: string | number
   nickname: string
   tournament: string
   source: VisitSource
@@ -26,6 +28,10 @@ export type HostessVisit = {
 
 defineProps<{
   visits: HostessVisit[]
+}>()
+
+const emit = defineEmits<{
+  change: [participantId: string, payload: UpdateEventParticipantPayload]
 }>()
 
 const columns: DataTableColumn[] = [
@@ -119,12 +125,6 @@ const columns: DataTableColumn[] = [
     label: 'Комментарий',
     width: '220px',
   },
-  {
-    key: 'actions',
-    label: '',
-    align: 'right',
-    width: '110px',
-  },
 ]
 
 function getStatusLabel(status: VisitStatus) {
@@ -156,15 +156,21 @@ function formatMoney(value: number) {
     :columns="columns"
     :rows="visits"
     row-key="id"
-    min-width="1580px"
+    min-width="1470px"
     empty-text="Игроки не найдены"
   >
     <template #cell-badge="{ row }">
-      <span
-        class="inline-flex h-7 min-w-9 items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-semibold text-slate-800"
-      >
-        {{ (row as HostessVisit).badge }}
-      </span>
+      <EditableCellInput
+        :model-value="(row as HostessVisit).badge"
+        type="text"
+        inputmode="numeric"
+        class="w-16 text-center"
+        @update:model-value="
+          emit('change', (row as HostessVisit).id, {
+            badge: String($event).trim() || null,
+          })
+        "
+      />
     </template>
 
     <template #cell-nickname="{ row }">
@@ -240,15 +246,6 @@ function formatMoney(value: number) {
       <div class="max-w-52 truncate text-slate-600">
         {{ (row as HostessVisit).debtComment || '—' }}
       </div>
-    </template>
-
-    <template #cell-actions="{ row }">
-      <NuxtLink
-        :to="`/dashboard/events/${$route.params.eventId}/participants/${(row as HostessVisit).id}`"
-        class="inline-flex h-8 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
-      >
-        Изменить
-      </NuxtLink>
     </template>
   </UiDataTable>
 </template>

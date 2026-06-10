@@ -10,6 +10,7 @@ export type ApiResponse<T> = {
 export type ApiMaybeResponse<T> = ApiResponse<T> | T
 
 export type UpdateEventParticipantPayload = {
+  badge?: string | null
   userBadge?: number | null
   closed?: boolean
   payment?: Partial<{
@@ -74,6 +75,8 @@ export type EventItem = {
 
 export interface ParticipantUser {
   id: string
+  name?: string | null
+  badge?: number | string | null
   avatarUrl?: string | null
   avatarHash?: string | null
   email: string
@@ -87,28 +90,71 @@ export interface ParticipantUser {
 
 export interface EventParticipant {
   id: string
-  userId: string
+  externalId?: string | null
+  userId?: string
+  externalUserId?: string | null
   eventId: string
   status: string
   createdAt: string
+  registeredAt?: string | null
   cancelledAt: string | null
   position: number | null
+  badge?: string | null
   userBadge?: number | null
   tableNumber: number | null
   seatNumber: number | null
-  user: ParticipantUser
-  closed: boolean
+  userName?: string | null
+  userEmail?: string | null
+  userPhone?: string | null
+  userTelegramId?: string | null
+  userAvatarUrl?: string | null
+  user?: ParticipantUser
+  closed?: boolean
+  bartenderSale?: {
+    id: string
+    participantId: string
+    amount: number
+    comment: string | null
+    createdAt: string
+    updatedAt: string
+  } | null
+  debt?: {
+    id: string
+    participantId: string
+    amount: number
+    comment: string | null
+    closed: boolean
+    createdAt: string
+    updatedAt: string
+  } | null
   payment?: EventParticipantPayment | null
+  promotion?: EventPromotionDetails | null
+  tournament?: {
+    id: string
+    participantId: string
+    reEntry: number
+    addon: number
+    knockouts: number
+    bustoutOrder: number
+    status: string
+    createdAt: string
+    updatedAt: string
+  } | null
 }
 
 export interface EventParticipantPayment {
   id: string
   participantId: string
-  tournament: number
-  bar: number
+  tournament?: number
+  accruedAmount?: number
+  discountAmount?: number
+  bar?: number
   barComment?: string | null
-  games: number
-  paid: number
+  games?: number
+  paid?: number
+  paidAmount?: number
+  status?: EventPaymentStatus | string
+  comment?: string | null
   createdAt: string
   updatedAt: string
 }
