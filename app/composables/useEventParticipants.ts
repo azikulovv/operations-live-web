@@ -98,8 +98,13 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     }
 
     const response = await api.updateEventParticipant(currentEventId.value, participantId, payload)
+    const updatedParticipant = response.data
 
-    return response.data
+    rows.value = rows.value.map((participant) => {
+      return participant.id === participantId ? { ...participant, ...updatedParticipant } : participant
+    })
+
+    return updatedParticipant
   }
 
   return {

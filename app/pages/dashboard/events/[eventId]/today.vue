@@ -18,6 +18,8 @@ useHead({
 })
 
 const search = ref('')
+const arrivalPending = ref<Record<string, boolean>>({})
+const arrivalErrors = ref<Record<string, string>>({})
 
 const eventTitle = computed(() => eventId.value)
 
@@ -65,6 +67,9 @@ const visits = computed<HostessVisit[]>(() => {
     tournament: eventTitle.value,
     source: 'app',
     status: getParticipantStatus(participant),
+    arrived: participant.arrived,
+    isArrivalUpdating: Boolean(arrivalPending.value[participant.id]),
+    arrivalError: arrivalErrors.value[participant.id] ?? null,
     tableNumber: participant.tableNumber,
     seatNumber: participant.seatNumber,
     tournamentAmount: participant.payment?.accruedAmount ?? participant.payment?.tournament ?? 0,
@@ -103,10 +108,34 @@ async function refreshPage() {
 }
 
 async function onChange(participantId: string, payload: UpdateEventParticipantPayload) {
+  const isArrivalUpdate = 'arrived' in payload
+
   try {
+    if (isArrivalUpdate) {
+      arrivalPending.value = {
+        ...arrivalPending.value,
+        [participantId]: true,
+      }
+      const { [participantId]: _discarded, ...restErrors } = arrivalErrors.value
+      arrivalErrors.value = restErrors
+    }
+
     await updateParticipant(participantId, payload)
   } catch (error) {
+    if (isArrivalUpdate) {
+      arrivalErrors.value = {
+        ...arrivalErrors.value,
+        [participantId]:
+          error instanceof Error ? error.message : 'Не удалось сохранить отметку присутствия.',
+      }
+    }
+
     console.log(error)
+  } finally {
+    if (isArrivalUpdate) {
+      const { [participantId]: _discarded, ...restPending } = arrivalPending.value
+      arrivalPending.value = restPending
+    }
   }
 }
 </script>

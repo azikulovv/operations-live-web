@@ -9,6 +9,7 @@ export type ApiResponse<T> = {
 export type ApiMaybeResponse<T> = ApiResponse<T> | T
 
 export type UpdateEventParticipantPayload = {
+  arrived?: boolean
   badge?: string | null
   userBadge?: number | null
   closed?: boolean
@@ -94,6 +95,7 @@ export interface EventParticipant {
   externalUserId?: string | null
   eventId: string
   status: string
+  arrived: boolean
   createdAt: string
   registeredAt?: string | null
   cancelledAt: string | null

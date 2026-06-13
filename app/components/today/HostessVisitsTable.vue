@@ -15,6 +15,9 @@ export type HostessVisit = {
   source: VisitSource
   registeredAt: string
   status: VisitStatus
+  arrived: boolean
+  isArrivalUpdating: boolean
+  arrivalError: string | null
   tableNumber: number | null
   seatNumber: number | null
   tournamentAmount: number
@@ -66,6 +69,11 @@ const columns: DataTableColumn[] = [
   {
     key: 'status',
     label: 'Статус',
+    width: '130px',
+  },
+  {
+    key: 'arrived',
+    label: 'Присутствие',
     width: '130px',
   },
   {
@@ -156,7 +164,7 @@ function formatMoney(value: number) {
     :columns="columns"
     :rows="visits"
     row-key="id"
-    min-width="1470px"
+    min-width="1600px"
     empty-text="Игроки не найдены"
   >
     <template #cell-badge="{ row }">
@@ -199,6 +207,42 @@ function formatMoney(value: number) {
       >
         {{ getStatusLabel((row as HostessVisit).status) }}
       </span>
+    </template>
+
+    <template #cell-arrived="{ row }">
+      <div class="flex flex-col items-start gap-1">
+        <button
+          type="button"
+          class="inline-flex h-7 min-w-24 items-center justify-center rounded-full px-3 text-[11px] font-semibold ring-1 transition disabled:cursor-wait disabled:opacity-70"
+          :class="
+            (row as HostessVisit).arrived
+              ? 'bg-emerald-50 text-emerald-700 ring-emerald-100 hover:bg-emerald-100'
+              : 'bg-slate-50 text-slate-500 ring-slate-200 hover:bg-slate-100'
+          "
+          :disabled="(row as HostessVisit).isArrivalUpdating"
+          :aria-pressed="(row as HostessVisit).arrived"
+          @click="
+            emit('change', (row as HostessVisit).id, {
+              arrived: !(row as HostessVisit).arrived,
+            })
+          "
+        >
+          {{
+            (row as HostessVisit).isArrivalUpdating
+              ? 'Сохраняем'
+              : (row as HostessVisit).arrived
+                ? 'Пришел'
+                : 'Не пришел'
+          }}
+        </button>
+
+        <span
+          v-if="(row as HostessVisit).arrivalError"
+          class="max-w-28 text-[10px] leading-3 text-red-600"
+        >
+          {{ (row as HostessVisit).arrivalError }}
+        </span>
+      </div>
     </template>
 
     <template #cell-tableNumber="{ row }">
