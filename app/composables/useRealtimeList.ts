@@ -18,6 +18,7 @@ export function useRealtimeList<TItem, TUpdate>(
   const rows = ref<TItem[]>([]) as Ref<TItem[]>
   const pending = ref(false)
   const error = ref<string | null>(null)
+  const { notifyError } = useNotifications()
 
   const currentEventId = computed(() => unref(eventId))
 
@@ -36,25 +37,32 @@ export function useRealtimeList<TItem, TUpdate>(
     } catch (err) {
       rows.value = []
       error.value = err instanceof Error ? err.message : 'Unknown error'
+      notifyError('Не удалось загрузить данные', error.value)
     } finally {
       pending.value = false
     }
   }
 
   async function updateItem(id: string, dto: TUpdate) {
-    const response = await apiRequest<TItem>(options.updatePath(id, currentEventId.value), {
-      method: 'PATCH',
-      body: JSON.stringify(dto),
-    })
-    const updatedItem = response.data
-
-    if (options.getUpdateId) {
-      rows.value = rows.value.map((item) => {
-        return options.getUpdateId?.(item) === id ? { ...item, ...updatedItem } : item
+    try {
+      const response = await apiRequest<TItem>(options.updatePath(id, currentEventId.value), {
+        method: 'PATCH',
+        body: JSON.stringify(dto),
       })
-    }
+      const updatedItem = response.data
 
-    return updatedItem
+      if (options.getUpdateId) {
+        rows.value = rows.value.map((item) => {
+          return options.getUpdateId?.(item) === id ? { ...item, ...updatedItem } : item
+        })
+      }
+
+      return updatedItem
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Не удалось сохранить изменения.'
+      notifyError('Ошибка сохранения', message)
+      throw err
+    }
   }
 
   function onListUpdated(payload: ModuleListUpdatedPayload<TItem>) {

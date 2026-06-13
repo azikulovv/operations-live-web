@@ -1,6 +1,7 @@
 export const useApi = () => {
   const config = useRuntimeConfig()
   const token = useCookie<string | null>('access_token')
+  const { notifyError } = useNotifications()
 
   return $fetch.create({
     baseURL: config.public.apiBaseUrl,
@@ -21,7 +22,18 @@ export const useApi = () => {
         if (import.meta.client) {
           navigateTo('/signin')
         }
+
+        return
       }
+
+      notifyError(
+        'Ошибка запроса',
+        getApiErrorMessage(response._data, `API error: ${response.status}`),
+      )
+    },
+
+    onRequestError({ error }) {
+      notifyError('Ошибка запроса', getApiErrorMessage(error))
     },
   })
 }
