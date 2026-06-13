@@ -9,7 +9,7 @@ export type VisitSource = 'app' | 'manual'
 
 export type HostessVisit = {
   id: string
-  badge: string | number
+  badge: string | number | null
   nickname: string
   tournament: string
   source: VisitSource
@@ -170,7 +170,7 @@ function formatMoney(value: number) {
   >
     <template #cell-badge="{ row }">
       <EditableCellInput
-        :model-value="(row as HostessVisit).badge"
+        :model-value="(row as HostessVisit).badge ?? ''"
         type="text"
         inputmode="numeric"
         class="w-16 text-center"
