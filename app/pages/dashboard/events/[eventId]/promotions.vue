@@ -29,18 +29,6 @@ const {
 } = useEventPromotions(promotionsEventId)
 
 const search = ref('')
-const promotionForms = reactive<
-  Record<
-    string,
-    {
-      promotionType: string
-      reason: string
-      discountPercent: number
-      used: number
-      comment: string
-    }
-  >
->({})
 
 const eventTitle = computed(() => event.value?.title || eventId.value)
 const isLoading = computed(() => isEventsLoading.value || isPromotionsLoading.value)
@@ -67,37 +55,17 @@ function getPlayerName(promotion: PromotionRow) {
   return promotion.user.name || promotion.user.email || '—'
 }
 
-function getForm(promotion: PromotionRow) {
-  const existing = promotionForms[promotion.participantId]
-
-  if (existing) return existing
-
-  const form = {
-    promotionType: promotion.promotion?.promotionType ?? 'DISCOUNT',
-    reason: promotion.promotion?.reason ?? '',
-    discountPercent: promotion.promotion?.discountPercent ?? 0,
-    used: promotion.promotion?.used ?? 0,
-    comment: promotion.promotion?.comment ?? '',
-  }
-
-  promotionForms[promotion.participantId] = form
-
-  return form
-}
-
 const promotionRows = computed<PromotionTableRow[]>(() => {
   return promotions.value.map((promotion) => {
-    const form = getForm(promotion)
-
     return {
       participantId: promotion.participantId,
       badge: promotion.user.badge,
       nickname: getPlayerName(promotion),
-      promotionType: form.promotionType,
-      reason: form.reason,
-      discountPercent: form.discountPercent,
-      used: form.used,
-      comment: form.comment,
+      promotionType: promotion.promotion?.promotionType ?? 'DISCOUNT',
+      reason: promotion.promotion?.reason ?? '',
+      discountPercent: promotion.promotion?.discountPercent ?? 0,
+      used: promotion.promotion?.used ?? 0,
+      comment: promotion.promotion?.comment ?? '',
     }
   })
 })

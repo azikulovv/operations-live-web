@@ -46,8 +46,15 @@ export function useRealtimeList<TItem, TUpdate>(
       method: 'PATCH',
       body: JSON.stringify(dto),
     })
+    const updatedItem = response.data
 
-    return response.data
+    if (options.getUpdateId) {
+      rows.value = rows.value.map((item) => {
+        return options.getUpdateId?.(item) === id ? { ...item, ...updatedItem } : item
+      })
+    }
+
+    return updatedItem
   }
 
   function onListUpdated(payload: ModuleListUpdatedPayload<TItem>) {

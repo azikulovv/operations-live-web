@@ -9,6 +9,7 @@ export const useEventPromotions = (eventId: string | Ref<string>) => {
     listPath: (eventId) => `/events/${eventId}/promotions`,
     updatePath: (participantId) => `/promotions/${participantId}`,
     listUpdatedEvent: 'promotions:list-updated',
+    getUpdateId: (promotion) => promotion.participantId,
   })
 
   return {
