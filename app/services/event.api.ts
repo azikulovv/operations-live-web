@@ -19,6 +19,12 @@ export function useEventsApi() {
     })
   }
 
+  function getUpcomingEvents() {
+    return api<ApiMaybeResponse<EventItem[]>>('/events/upcoming', {
+      method: 'GET',
+    })
+  }
+
   function getEventParticipants(eventId: string) {
     return api<ApiMaybeResponse<EventParticipant[]>>(`/events/${eventId}/participants`, {
       method: 'GET',
@@ -67,6 +73,7 @@ export function useEventsApi() {
     getEventPayments,
     getEventParticipants,
     getEventPromotions,
+    getUpcomingEvents,
     updateEventPayment,
     updateEventPromotion,
     updateEventParticipant,

@@ -142,7 +142,9 @@ const tableInfo = computed(() => {
         <div>
           <p class="text-[11px] text-slate-400">Лимит</p>
           <p class="mt-1 text-xs font-semibold text-slate-950">
-            {{ event.participantLimit }} игроков
+            {{
+              event.participantLimit == null ? 'Не задано' : `${event.participantLimit} игроков`
+            }}
           </p>
         </div>
 

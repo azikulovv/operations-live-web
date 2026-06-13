@@ -16,11 +16,43 @@ useHead({
 const selectedStatus = ref<EventFilterStatus>('active')
 const search = ref('')
 
-const { events, filteredEvents, statusCounts, isLoading, error, fetchEvents } = useEvents({
+const {
+  events,
+  filteredEvents,
+  statusCounts,
+  isLoading: isEventsLoading,
+  error: eventsError,
+  fetchEvents,
+} = useEvents({
   filters: {
     search,
     status: selectedStatus,
   },
+})
+const {
+  events: upcomingEvents,
+  filteredEvents: filteredUpcomingEvents,
+  isLoading: isUpcomingEventsLoading,
+  error: upcomingEventsError,
+  fetchEvents: fetchUpcomingEvents,
+} = useUpcomingEvents({
+  filters: {
+    search,
+  },
+})
+
+const isUpcomingSelected = computed(() => selectedStatus.value === 'upcoming')
+const visibleEvents = computed(() => {
+  return isUpcomingSelected.value ? filteredUpcomingEvents.value : filteredEvents.value
+})
+const loadedEvents = computed(() => {
+  return isUpcomingSelected.value ? upcomingEvents.value : events.value
+})
+const isLoading = computed(() => {
+  return isUpcomingSelected.value ? isUpcomingEventsLoading.value : isEventsLoading.value
+})
+const error = computed(() => {
+  return isUpcomingSelected.value ? upcomingEventsError.value : eventsError.value
 })
 
 const tabs = computed<
@@ -34,19 +66,27 @@ const tabs = computed<
     value: 'active',
   },
   {
+    label: `Предстоящие ${upcomingEvents.value.length}`,
+    value: 'upcoming',
+  },
+  {
     label: `Прошедшие ${statusCounts.value.completed}`,
     value: 'completed',
   },
 ])
 
 const eventsCountText = computed(() => {
-  const count = events.value.length
+  const count = loadedEvents.value.length
 
   if (count === 1) return '1 событие'
   if (count > 1 && count < 5) return `${count} события`
 
   return `${count} событий`
 })
+
+function retryFetchEvents() {
+  return isUpcomingSelected.value ? fetchUpcomingEvents() : fetchEvents()
+}
 
 function openEvent(event: EventItem) {
   return navigateTo(`/dashboard/events/${event.externalId ?? event.id}/today`)
@@ -111,13 +151,13 @@ function openEvent(event: EventItem) {
         <button
           type="button"
           class="mt-3 h-9 rounded-xl bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
-          @click="fetchEvents"
+          @click="retryFetchEvents"
         >
           Повторить
         </button>
       </div>
 
-      <EventsList v-else :events="filteredEvents" @open="openEvent" />
+      <EventsList v-else :events="visibleEvents" @open="openEvent" />
     </UiCard>
   </div>
 </template>

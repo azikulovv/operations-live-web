@@ -17,6 +17,28 @@ function getFilterStatus(event: EventItem): EventFilterStatus {
   return event.status === 'completed' ? 'completed' : 'active'
 }
 
+export function filterEventsBySearch(events: EventItem[], search: string) {
+  const query = search.trim().toLowerCase()
+
+  if (!query) return events
+
+  return events.filter((event) => {
+    const searchableText = [
+      event.title,
+      event.city,
+      event.address,
+      event.gameType,
+      event.features,
+      event.startsAt,
+      event.endsAt,
+    ]
+      .map(normalize)
+      .join(' ')
+
+    return searchableText.includes(query)
+  })
+}
+
 export const useEvents = (options: UseEventsOptions = {}) => {
   const api = useEventsApi()
   const {
@@ -31,24 +53,11 @@ export const useEvents = (options: UseEventsOptions = {}) => {
 
   const filterEvents = (search: Ref<string>, selectedStatus: Ref<EventFilterStatus>) => {
     return computed(() => {
-      const query = search.value.trim().toLowerCase()
-
-      return events.value.filter((event) => {
-        const matchesStatus = getFilterStatus(event) === selectedStatus.value
-        const searchableText = [
-          event.title,
-          event.city,
-          event.address,
-          event.gameType,
-          event.features,
-          event.startsAt,
-          event.endsAt,
-        ]
-          .map(normalize)
-          .join(' ')
-
-        return matchesStatus && (!query || searchableText.includes(query))
+      const eventsByStatus = events.value.filter((event) => {
+        return getFilterStatus(event) === selectedStatus.value
       })
+
+      return filterEventsBySearch(eventsByStatus, search.value)
     })
   }
 
@@ -66,6 +75,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
       {
         active: 0,
         completed: 0,
+        upcoming: 0,
       },
     )
   })

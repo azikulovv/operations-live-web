@@ -1,7 +1,6 @@
-export type EventFilterStatus = 'active' | 'completed'
-export type EventStatus = EventFilterStatus | 'cancelled' | 'draft' | 'published'
-
-export type OperationEventStatus = EventFilterStatus
+export type EventFilterStatus = 'active' | 'completed' | 'upcoming'
+export type OperationEventStatus = Exclude<EventFilterStatus, 'upcoming'>
+export type EventStatus = OperationEventStatus | 'cancelled' | 'draft' | 'published'
 
 export type ApiResponse<T> = {
   data: T
@@ -63,7 +62,7 @@ export type EventItem = {
   gameType: string
   startsAt: string
   endsAt: string | null
-  participantLimit: number
+  participantLimit: number | null
   seatsPerTable?: number | null
   tableCount?: number | null
   status: EventStatus
