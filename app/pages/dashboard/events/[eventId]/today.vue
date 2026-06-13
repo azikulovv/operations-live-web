@@ -40,7 +40,7 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function getParticipantStatus(participant: EventParticipant): HostessVisit['status'] {
-  if (participant.cancelledAt) return 'completed'
+  if (participant.cancelledAt) return 'cancelled'
 
   return participant.status === 'PARTICIPANT' ? 'registered' : 'in_tournament'
 }

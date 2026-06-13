@@ -4,7 +4,7 @@ import UiDataTable from '~/components/ui/UiDataTable.vue'
 import type { UpdateEventParticipantPayload } from '~/types/event'
 import EditableCellInput from '../ui/EditableCellInput.vue'
 
-export type VisitStatus = 'registered' | 'in_tournament' | 'completed'
+export type VisitStatus = 'registered' | 'in_tournament' | 'completed' | 'cancelled'
 export type VisitSource = 'app' | 'manual'
 
 export type HostessVisit = {
@@ -140,6 +140,7 @@ function getStatusLabel(status: VisitStatus) {
     registered: 'Зарегистрирован',
     in_tournament: 'В турнире',
     completed: 'Завершён',
+    cancelled: 'Отменил',
   }
 
   return labels[status]
