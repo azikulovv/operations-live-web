@@ -2,6 +2,6 @@ export default defineNuxtRouteMiddleware(() => {
   const authStore = useAuthStore()
 
   if (authStore.isAuthenticated) {
-    return navigateTo('/dashboard')
+    return navigateTo('/dashboard/events')
   }
 })
