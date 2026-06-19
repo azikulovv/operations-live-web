@@ -20,7 +20,8 @@ export type HostessVisit = {
   arrivalError: string | null
   tableNumber: number | null
   seatNumber: number | null
-  tournamentAmount: number
+  reEntry: number
+  addon: number
   barAmount: number
   dartsAmount: number
   totalAmount: number
@@ -89,11 +90,14 @@ const columns: DataTableColumn[] = [
     width: '80px',
   },
   {
-    key: 'tournamentAmount',
-    label: 'Турнир',
-    align: 'right',
+    key: 'reEntry',
+    label: 'Re-Entry',
+    width: '110px',
+  },
+  {
+    key: 'addon',
+    label: 'Addon',
     width: '100px',
-    cellClass: 'bg-emerald-50/50 tabular-nums text-slate-700',
   },
   {
     key: 'barAmount',
@@ -254,8 +258,12 @@ function formatMoney(value: number) {
       {{ (row as HostessVisit).seatNumber ?? '—' }}
     </template>
 
-    <template #cell-tournamentAmount="{ row }">
-      {{ formatMoney((row as HostessVisit).tournamentAmount) }}
+    <template #cell-reEntry="{ row }">
+      {{ (row as HostessVisit).reEntry }}
+    </template>
+
+    <template #cell-addon="{ row }">
+      {{ (row as HostessVisit).addon }}
     </template>
 
     <template #cell-barAmount="{ row }">

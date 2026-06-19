@@ -67,7 +67,8 @@ const visits = computed<HostessVisit[]>(() => {
     arrivalError: arrivalErrors.value[participant.id] ?? null,
     tableNumber: participant.tableNumber,
     seatNumber: participant.seatNumber,
-    tournamentAmount: participant.payment?.accruedAmount ?? participant.payment?.tournament ?? 0,
+    reEntry: participant.tournament?.reEntry ?? 0,
+    addon: participant.tournament?.addon ?? 0,
     barAmount: participant.bartenderSale?.amount ?? participant.payment?.bar ?? 0,
     dartsAmount: participant.payment?.games ?? 0,
     totalAmount:
