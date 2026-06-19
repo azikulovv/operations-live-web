@@ -3,6 +3,16 @@ import type { MaybeRef, Ref } from 'vue'
 import { useEventsApi } from '~/services/event.api'
 import type { EventParticipant, UpdateEventParticipantPayload } from '~/types/event'
 
+const relatedListUpdatedEvents = [
+  'payments:list-updated',
+  'promotions:list-updated',
+  'debts:list-updated',
+  'bartender-sales:list-updated',
+  'tournament:list-updated',
+  'final-table:list-updated',
+  'tables:list-updated',
+] as const
+
 export const useEventParticipants = (eventId: MaybeRef<string>) => {
   const api = useEventsApi()
   const eventSocket = useEventSocket()
@@ -11,24 +21,26 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
   const error = ref<string | null>(null)
   const currentEventId = computed(() => unref(eventId))
   let realtimeSocket: ReturnType<typeof eventSocket.connect> = null
+  let relatedRefreshInProgress = false
+  let relatedRefreshQueued = false
 
-  async function fetchList() {
+  async function fetchList(silent = false) {
     if (!currentEventId.value) {
       rows.value = []
       return
     }
 
-    pending.value = true
+    if (!silent) pending.value = true
     error.value = null
 
     try {
       const response = await api.getEventParticipants(currentEventId.value)
       rows.value = getApiData(response)
     } catch (err) {
-      rows.value = []
+      if (!silent) rows.value = []
       error.value = err instanceof Error ? err.message : 'Не удалось загрузить игроков.'
     } finally {
-      pending.value = false
+      if (!silent) pending.value = false
     }
   }
 
@@ -42,6 +54,30 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     rows.value = getApiData(payload)
   }
 
+  async function refreshAfterRelatedUpdate() {
+    if (relatedRefreshInProgress) {
+      relatedRefreshQueued = true
+      return
+    }
+
+    relatedRefreshInProgress = true
+
+    try {
+      do {
+        relatedRefreshQueued = false
+        await fetchList(true)
+      } while (relatedRefreshQueued)
+    } finally {
+      relatedRefreshInProgress = false
+    }
+  }
+
+  function onRelatedListUpdated(payload: { eventId?: string | number }) {
+    if (String(payload.eventId ?? '') !== currentEventId.value) return
+
+    void refreshAfterRelatedUpdate()
+  }
+
   onMounted(() => {
     const socket = eventSocket.connect()
 
@@ -49,6 +85,9 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
 
     realtimeSocket = socket
     socket.on('events:participants:updated', onParticipantsUpdated)
+    relatedListUpdatedEvents.forEach((event) => {
+      socket.on(event, onRelatedListUpdated)
+    })
 
     if (currentEventId.value) {
       socket.emit('events:participants:subscribe', {
@@ -86,6 +125,9 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
       eventId: currentEventId.value,
     })
     realtimeSocket.off('events:participants:updated', onParticipantsUpdated)
+    relatedListUpdatedEvents.forEach((event) => {
+      realtimeSocket?.off(event, onRelatedListUpdated)
+    })
   })
 
   function fetchParticipants() {
