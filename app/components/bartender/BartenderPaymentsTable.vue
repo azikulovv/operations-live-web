@@ -87,6 +87,7 @@ const columns: DataTableColumn[] = [
       <EditableCellInput
         :model-value="(row as BartenderPayment).comment!"
         type="text"
+        :debounce="600"
         class="w-65"
         @update:model-value="
           emit('change', (row as BartenderPayment).participantId, {

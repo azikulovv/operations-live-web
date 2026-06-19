@@ -19,6 +19,7 @@ export function useRealtimeList<TItem, TUpdate>(
   const pending = ref(false)
   const error = ref<string | null>(null)
   const { notifyError } = useNotifications()
+  const updateQueues = new Map<string, Promise<unknown>>()
 
   const currentEventId = computed(() => unref(eventId))
 
@@ -43,26 +44,37 @@ export function useRealtimeList<TItem, TUpdate>(
     }
   }
 
-  async function updateItem(id: string, dto: TUpdate) {
-    try {
-      const response = await apiRequest<TItem>(options.updatePath(id, currentEventId.value), {
-        method: 'PATCH',
-        body: JSON.stringify(dto),
-      })
-      const updatedItem = response.data
-
-      if (options.getUpdateId) {
-        rows.value = rows.value.map((item) => {
-          return options.getUpdateId?.(item) === id ? { ...item, ...updatedItem } : item
+  function updateItem(id: string, dto: TUpdate) {
+    const previousUpdate = updateQueues.get(id) ?? Promise.resolve()
+    const update = previousUpdate.catch(() => undefined).then(async () => {
+      try {
+        const response = await apiRequest<TItem>(options.updatePath(id, currentEventId.value), {
+          method: 'PATCH',
+          body: JSON.stringify(dto),
         })
-      }
+        const updatedItem = response.data
 
-      return updatedItem
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Не удалось сохранить изменения.'
-      notifyError('Ошибка сохранения', message)
-      throw err
+        if (options.getUpdateId) {
+          rows.value = rows.value.map((item) => {
+            return options.getUpdateId?.(item) === id ? { ...item, ...updatedItem } : item
+          })
+        }
+
+        return updatedItem
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Не удалось сохранить изменения.'
+        notifyError('Ошибка сохранения', message)
+        throw err
+      }
+    })
+
+    updateQueues.set(id, update)
+    const clearQueue = () => {
+      if (updateQueues.get(id) === update) updateQueues.delete(id)
     }
+    void update.then(clearQueue, clearQueue)
+
+    return update
   }
 
   function onListUpdated(payload: ModuleListUpdatedPayload<TItem>) {

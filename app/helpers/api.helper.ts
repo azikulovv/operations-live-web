@@ -2,6 +2,13 @@ type ApiResponse<T> = {
   data: T
 }
 
+const retryableStatuses = new Set([408, 429, 502, 503, 504])
+const maxAttempts = 3
+
+function wait(delay: number) {
+  return new Promise((resolve) => setTimeout(resolve, delay))
+}
+
 async function getResponseErrorMessage(response: Response) {
   const fallback = `API error: ${response.status}`
   const contentType = response.headers.get('content-type') ?? ''
@@ -22,19 +29,34 @@ async function getResponseErrorMessage(response: Response) {
 
 export async function apiRequest<T>(path: string, options?: RequestInit) {
   const config = useRuntimeConfig()
+  const url = `${config.public.apiBaseUrl}${path}`
 
-  const response = await fetch(`${config.public.apiBaseUrl}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    ...options,
-  })
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        ...options,
+      })
 
-  if (!response.ok) {
-    throw new Error(await getResponseErrorMessage(response))
+      if (response.ok) {
+        return response.json() as Promise<ApiResponse<T>>
+      }
+
+      if (!retryableStatuses.has(response.status) || attempt === maxAttempts - 1) {
+        throw new Error(await getResponseErrorMessage(response))
+      }
+    } catch (error) {
+      const canRetry = error instanceof TypeError && attempt < maxAttempts - 1
+
+      if (!canRetry) throw error
+    }
+
+    await wait(400 * 2 ** attempt)
   }
 
-  return response.json() as Promise<ApiResponse<T>>
+  throw new Error('Не удалось выполнить запрос.')
 }

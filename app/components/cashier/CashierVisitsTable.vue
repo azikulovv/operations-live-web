@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import type { PaymentStatus as ApiPaymentStatus, UpdatePaymentDto } from '~/types/operations'
+import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
 export type CashierVisit = {
@@ -157,19 +158,18 @@ function getFiniteNumber(value: number) {
     </template>
 
     <template #cell-totalAmount="{ row }">
-      <input
-        :value="(row as CashierVisit).totalAmount"
+      <EditableCellInput
+        :model-value="(row as CashierVisit).totalAmount"
         type="number"
+        inputmode="decimal"
         min="0"
-        class="h-8 w-24 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @input="
+        class="w-24 text-right"
+        @update:model-value="
           emit(
             'change',
             (row as CashierVisit).participantId,
             (() => {
-              const accruedAmount = getFiniteNumber(
-                Number(($event.target as HTMLInputElement).value),
-              )
+              const accruedAmount = getFiniteNumber(Number($event))
               const toPayAmount = getPayableAmount(
                 accruedAmount,
                 (row as CashierVisit).discountAmount,
@@ -201,17 +201,18 @@ function getFiniteNumber(value: number) {
     </template>
 
     <template #cell-paidAmount="{ row }">
-      <input
-        :value="(row as CashierVisit).paidAmount"
+      <EditableCellInput
+        :model-value="(row as CashierVisit).paidAmount"
         type="number"
+        inputmode="decimal"
         min="0"
-        class="h-8 w-24 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @input="
+        class="w-24 text-right"
+        @update:model-value="
           emit(
             'change',
             (row as CashierVisit).participantId,
             (() => {
-              const paidAmount = getFiniteNumber(Number(($event.target as HTMLInputElement).value))
+              const paidAmount = getFiniteNumber(Number($event))
 
               return {
                 paidAmount,
@@ -233,14 +234,14 @@ function getFiniteNumber(value: number) {
     </template>
 
     <template #cell-comment="{ row }">
-      <input
-        :value="(row as CashierVisit).comment"
+      <EditableCellInput
+        :model-value="(row as CashierVisit).comment"
         type="text"
-        class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        placeholder="Комментарий"
-        @input="
+        :debounce="600"
+        class="w-full"
+        @update:model-value="
           emit('change', (row as CashierVisit).participantId, {
-            comment: ($event.target as HTMLInputElement).value || null,
+            comment: String($event) || null,
           })
         "
       />

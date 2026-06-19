@@ -5,6 +5,7 @@ import { useEventsApi } from '~/services/event.api'
 import type { EventParticipant, UpdateEventParticipantPayload } from '~/types/event'
 import type {
   UpdateBartenderSaleDto,
+  UpdateDebtDto,
   UpdatePaymentDto,
   UpdateTournamentDto,
 } from '~/types/operations'
@@ -29,6 +30,7 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
   let realtimeSocket: ReturnType<typeof eventSocket.connect> = null
   let relatedRefreshInProgress = false
   let relatedRefreshQueued = false
+  const relatedUpdateQueues = new Map<string, Promise<unknown>>()
 
   async function fetchList(silent = false) {
     if (!currentEventId.value) {
@@ -155,12 +157,23 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     return updatedParticipant
   }
 
-  async function updateRelatedItem(path: string, payload: object) {
-    await apiRequest(path, {
-      method: 'PATCH',
-      body: JSON.stringify(payload),
+  function updateRelatedItem(path: string, payload: object) {
+    const previousUpdate = relatedUpdateQueues.get(path) ?? Promise.resolve()
+    const update = previousUpdate.catch(() => undefined).then(async () => {
+      await apiRequest(path, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      })
+      await fetchList(true)
     })
-    await fetchList(true)
+
+    relatedUpdateQueues.set(path, update)
+    const clearQueue = () => {
+      if (relatedUpdateQueues.get(path) === update) relatedUpdateQueues.delete(path)
+    }
+    void update.then(clearQueue, clearQueue)
+
+    return update
   }
 
   function updateTournament(participantId: string, payload: UpdateTournamentDto) {
@@ -175,6 +188,10 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     return updateRelatedItem(`/payments/${participantId}`, payload)
   }
 
+  function updateDebt(participantId: string, payload: UpdateDebtDto) {
+    return updateRelatedItem(`/debts/${participantId}`, payload)
+  }
+
   return {
     rows,
     pending,
@@ -185,6 +202,7 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     updateTournament,
     updateBartenderSale,
     updatePayment,
+    updateDebt,
     participants: rows,
     isLoading: pending,
     fetchParticipants,

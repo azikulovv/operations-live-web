@@ -2,6 +2,7 @@
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import type { EventPromotionType } from '~/types/event'
 import type { UpdatePromotionDto } from '~/types/operations'
+import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type PromotionTableRow = {
   participantId: string
@@ -119,29 +120,29 @@ function isPromotionUsed(promotion: PromotionTableRow) {
     </template>
 
     <template #cell-discountPercent="{ row }">
-      <input
-        :value="(row as PromotionTableRow).discountPercent"
+      <EditableCellInput
+        :model-value="(row as PromotionTableRow).discountPercent"
         type="number"
+        inputmode="numeric"
         min="0"
         max="100"
-        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @input="
+        class="w-20 text-right"
+        @update:model-value="
           emit('change', (row as PromotionTableRow).participantId, {
-            discountPercent: Number(($event.target as HTMLInputElement).value),
+            discountPercent: Number($event),
           })
         "
       />
     </template>
 
     <template #cell-reason="{ row }">
-      <input
-        :value="(row as PromotionTableRow).reason"
+      <EditableCellInput
+        :model-value="(row as PromotionTableRow).reason"
         type="text"
-        class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        placeholder="Причина"
-        @input="
+        class="w-full"
+        @update:model-value="
           emit('change', (row as PromotionTableRow).participantId, {
-            reason: ($event.target as HTMLInputElement).value || null,
+            reason: String($event) || null,
           })
         "
       />
@@ -149,15 +150,16 @@ function isPromotionUsed(promotion: PromotionTableRow) {
 
     <template #cell-used="{ row }">
       <label class="inline-flex items-center gap-2 text-xs text-slate-600">
-        <input
-          :value="isPromotionUsed(row as PromotionTableRow)"
+        <EditableCellInput
+          :model-value="isPromotionUsed(row as PromotionTableRow)"
           type="number"
+          inputmode="numeric"
           min="0"
           max="100"
-          class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-          @change="
+          class="w-20 text-right"
+          @update:model-value="
             emit('change', (row as PromotionTableRow).participantId, {
-              used: Number(($event.target as HTMLInputElement).value),
+              used: Number($event),
             })
           "
         />
@@ -165,14 +167,14 @@ function isPromotionUsed(promotion: PromotionTableRow) {
     </template>
 
     <template #cell-comment="{ row }">
-      <input
-        :value="(row as PromotionTableRow).comment"
+      <EditableCellInput
+        :model-value="(row as PromotionTableRow).comment"
         type="text"
-        class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        placeholder="Комментарий"
-        @input="
+        :debounce="600"
+        class="w-full"
+        @update:model-value="
           emit('change', (row as PromotionTableRow).participantId, {
-            comment: ($event.target as HTMLInputElement).value || null,
+            comment: String($event) || null,
           })
         "
       />

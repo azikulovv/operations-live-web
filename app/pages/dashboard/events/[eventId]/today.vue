@@ -4,6 +4,7 @@ import HostessVisitsTable from '~/components/today/HostessVisitsTable.vue'
 import type { EventParticipant, UpdateEventParticipantPayload } from '~/types/event'
 import type {
   UpdateBartenderSaleDto,
+  UpdateDebtDto,
   UpdatePaymentDto,
   UpdateTournamentDto,
 } from '~/types/operations'
@@ -25,6 +26,7 @@ const {
   updateTournament,
   updateBartenderSale,
   updatePayment,
+  updateDebt,
 } = useEventParticipants(eventId)
 
 useHead({
@@ -91,11 +93,7 @@ const visits = computed<HostessVisit[]>(() => {
       (participant.payment?.games ?? 0),
     paidAmount: participant.payment?.paidAmount ?? participant.payment?.paid ?? 0,
     isClosed: Boolean(participant.debt?.closed ?? participant.closed),
-    debtComment:
-      participant.debt?.comment ??
-      (participant.tableNumber && participant.seatNumber
-        ? `Стол ${participant.tableNumber}, место ${participant.seatNumber}`
-        : ''),
+    debtComment: participant.debt?.comment ?? '',
   }))
 })
 
@@ -168,6 +166,10 @@ function onBartenderChange(participantId: string, payload: UpdateBartenderSaleDt
 function onPaymentChange(participantId: string, payload: UpdatePaymentDto) {
   return saveRelatedChange(() => updatePayment(participantId, payload))
 }
+
+function onDebtChange(participantId: string, payload: UpdateDebtDto) {
+  return saveRelatedChange(() => updateDebt(participantId, payload))
+}
 </script>
 
 <template>
@@ -224,6 +226,7 @@ function onPaymentChange(participantId: string, payload: UpdatePaymentDto) {
         @tournament-change="onTournamentChange"
         @bartender-change="onBartenderChange"
         @payment-change="onPaymentChange"
+        @debt-change="onDebtChange"
       />
     </UiCard>
   </div>

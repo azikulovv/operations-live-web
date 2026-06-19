@@ -13,6 +13,7 @@ export function useEventTables(eventId: MaybeRef<string>) {
   const pending = ref(false)
   const error = ref<string | null>(null)
   const currentEventId = computed(() => unref(eventId))
+  const updateQueues = new Map<number, Promise<unknown>>()
 
   async function fetchList() {
     if (!currentEventId.value) {
@@ -34,16 +35,27 @@ export function useEventTables(eventId: MaybeRef<string>) {
     }
   }
 
-  async function updateTable(tableNumber: number, dto: UpdateEventTableDto) {
-    const response = await apiRequest<EventTableRow>(
-      `/events/${currentEventId.value}/tables/${tableNumber}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify(dto),
-      },
-    )
+  function updateTable(tableNumber: number, dto: UpdateEventTableDto) {
+    const previousUpdate = updateQueues.get(tableNumber) ?? Promise.resolve()
+    const update = previousUpdate.catch(() => undefined).then(async () => {
+      const response = await apiRequest<EventTableRow>(
+        `/events/${currentEventId.value}/tables/${tableNumber}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(dto),
+        },
+      )
 
-    return response.data
+      return response.data
+    })
+
+    updateQueues.set(tableNumber, update)
+    const clearQueue = () => {
+      if (updateQueues.get(tableNumber) === update) updateQueues.delete(tableNumber)
+    }
+    void update.then(clearQueue, clearQueue)
+
+    return update
   }
 
   function onListUpdated(payload: ModuleListUpdatedPayload<EventTableRow>) {

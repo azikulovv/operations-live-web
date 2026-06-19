@@ -4,6 +4,7 @@ import UiDataTable from '~/components/ui/UiDataTable.vue'
 import type { UpdateEventParticipantPayload } from '~/types/event'
 import type {
   UpdateBartenderSaleDto,
+  UpdateDebtDto,
   UpdatePaymentDto,
   UpdateTournamentDto,
 } from '~/types/operations'
@@ -44,6 +45,7 @@ const emit = defineEmits<{
   tournamentChange: [participantId: string, payload: UpdateTournamentDto]
   bartenderChange: [participantId: string, payload: UpdateBartenderSaleDto]
   paymentChange: [participantId: string, payload: UpdatePaymentDto]
+  debtChange: [participantId: string, payload: UpdateDebtDto]
 }>()
 
 const columns: DataTableColumn[] = [
@@ -267,45 +269,45 @@ function formatMoney(value: number) {
     </template>
 
     <template #cell-reEntry="{ row }">
-      <input
-        :value="(row as HostessVisit).reEntry"
+      <EditableCellInput
+        :model-value="(row as HostessVisit).reEntry"
         type="number"
-        min="0"
         inputmode="numeric"
-        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @change="
+        min="0"
+        class="w-20 text-right"
+        @update:model-value="
           emit('tournamentChange', (row as HostessVisit).id, {
-            reEntry: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+            reEntry: Math.max(0, Number($event) || 0),
           })
         "
       />
     </template>
 
     <template #cell-addon="{ row }">
-      <input
-        :value="(row as HostessVisit).addon"
+      <EditableCellInput
+        :model-value="(row as HostessVisit).addon"
         type="number"
-        min="0"
         inputmode="numeric"
-        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @change="
+        min="0"
+        class="w-20 text-right"
+        @update:model-value="
           emit('tournamentChange', (row as HostessVisit).id, {
-            addon: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+            addon: Math.max(0, Number($event) || 0),
           })
         "
       />
     </template>
 
     <template #cell-barAmount="{ row }">
-      <input
-        :value="(row as HostessVisit).barAmount"
+      <EditableCellInput
+        :model-value="(row as HostessVisit).barAmount"
         type="number"
-        min="0"
         inputmode="decimal"
-        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @change="
+        min="0"
+        class="w-20 text-right"
+        @update:model-value="
           emit('bartenderChange', (row as HostessVisit).id, {
-            amount: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+            amount: Math.max(0, Number($event) || 0),
           })
         "
       />
@@ -320,15 +322,15 @@ function formatMoney(value: number) {
     </template>
 
     <template #cell-paidAmount="{ row }">
-      <input
-        :value="(row as HostessVisit).paidAmount"
+      <EditableCellInput
+        :model-value="(row as HostessVisit).paidAmount"
         type="number"
-        min="0"
         inputmode="decimal"
-        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
-        @change="
+        min="0"
+        class="w-20 text-right"
+        @update:model-value="
           emit('paymentChange', (row as HostessVisit).id, {
-            paidAmount: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+            paidAmount: Math.max(0, Number($event) || 0),
           })
         "
       />
@@ -348,9 +350,17 @@ function formatMoney(value: number) {
     </template>
 
     <template #cell-debtComment="{ row }">
-      <div class="max-w-52 truncate text-slate-600">
-        {{ (row as HostessVisit).debtComment || '—' }}
-      </div>
+      <EditableCellInput
+        :model-value="(row as HostessVisit).debtComment"
+        type="text"
+        :debounce="600"
+        class="w-52"
+        @update:model-value="
+          emit('debtChange', (row as HostessVisit).id, {
+            comment: String($event),
+          })
+        "
+      />
     </template>
   </UiDataTable>
 </template>

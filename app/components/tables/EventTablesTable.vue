@@ -82,6 +82,7 @@ function getStatusOptions(status: string | null | undefined) {
       <EditableCellInput
         :model-value="String((row as EventTableRow).comment ?? '')"
         type="text"
+        :debounce="600"
         class="w-65"
         @update:model-value="
           emit('change', (row as EventTableRow).tableNumber, { comment: String($event) || null })
