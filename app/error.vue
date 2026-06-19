@@ -5,6 +5,8 @@ const props = defineProps<{
   error: NuxtError
 }>()
 
+const authStore = useAuthStore()
+
 const statusCode = computed(() => props.error.statusCode || 500)
 
 const errorTitle = computed(() => {
@@ -31,10 +33,38 @@ const errorDescription = computed(() => {
   return descriptions[statusCode.value] || 'Произошла непредвиденная ошибка.'
 })
 
-function handleGoHome() {
-  clearError({
-    redirect: '/dashboard/events',
-  })
+function getErrorStatus(error: unknown) {
+  if (!error || typeof error !== 'object') return null
+
+  if ('statusCode' in error && typeof error.statusCode === 'number') {
+    return error.statusCode
+  }
+
+  if ('status' in error && typeof error.status === 'number') {
+    return error.status
+  }
+
+  if ('response' in error && error.response instanceof Response) {
+    return error.response.status
+  }
+
+  return null
+}
+
+async function handleGoHome() {
+  try {
+    await authStore.fetchMe()
+
+    await clearError({
+      redirect: '/dashboard/events',
+    })
+  } catch (error) {
+    if (getErrorStatus(error) === 401) {
+      await clearError({
+        redirect: '/signin',
+      })
+    }
+  }
 }
 
 function handleGoLogin() {
