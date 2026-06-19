@@ -1,7 +1,13 @@
 import { unref } from 'vue'
 import type { MaybeRef, Ref } from 'vue'
+import { apiRequest } from '~/helpers/api.helper'
 import { useEventsApi } from '~/services/event.api'
 import type { EventParticipant, UpdateEventParticipantPayload } from '~/types/event'
+import type {
+  UpdateBartenderSaleDto,
+  UpdatePaymentDto,
+  UpdateTournamentDto,
+} from '~/types/operations'
 
 const relatedListUpdatedEvents = [
   'payments:list-updated',
@@ -149,6 +155,26 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     return updatedParticipant
   }
 
+  async function updateRelatedItem(path: string, payload: object) {
+    await apiRequest(path, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    })
+    await fetchList(true)
+  }
+
+  function updateTournament(participantId: string, payload: UpdateTournamentDto) {
+    return updateRelatedItem(`/tournament/${participantId}`, payload)
+  }
+
+  function updateBartenderSale(participantId: string, payload: UpdateBartenderSaleDto) {
+    return updateRelatedItem(`/bartender-sales/${participantId}`, payload)
+  }
+
+  function updatePayment(participantId: string, payload: UpdatePaymentDto) {
+    return updateRelatedItem(`/payments/${participantId}`, payload)
+  }
+
   return {
     rows,
     pending,
@@ -156,6 +182,9 @@ export const useEventParticipants = (eventId: MaybeRef<string>) => {
     fetchList,
     updateItem: updateParticipant,
     updateParticipant,
+    updateTournament,
+    updateBartenderSale,
+    updatePayment,
     participants: rows,
     isLoading: pending,
     fetchParticipants,

@@ -2,6 +2,11 @@
 import type { DataTableColumn } from '~/components/ui/UiDataTable.vue'
 import UiDataTable from '~/components/ui/UiDataTable.vue'
 import type { UpdateEventParticipantPayload } from '~/types/event'
+import type {
+  UpdateBartenderSaleDto,
+  UpdatePaymentDto,
+  UpdateTournamentDto,
+} from '~/types/operations'
 import EditableCellInput from '../ui/EditableCellInput.vue'
 
 export type VisitStatus = 'registered' | 'in_tournament' | 'completed' | 'cancelled'
@@ -36,6 +41,9 @@ defineProps<{
 
 const emit = defineEmits<{
   change: [participantId: string, payload: UpdateEventParticipantPayload]
+  tournamentChange: [participantId: string, payload: UpdateTournamentDto]
+  bartenderChange: [participantId: string, payload: UpdateBartenderSaleDto]
+  paymentChange: [participantId: string, payload: UpdatePaymentDto]
 }>()
 
 const columns: DataTableColumn[] = [
@@ -259,15 +267,48 @@ function formatMoney(value: number) {
     </template>
 
     <template #cell-reEntry="{ row }">
-      {{ (row as HostessVisit).reEntry }}
+      <input
+        :value="(row as HostessVisit).reEntry"
+        type="number"
+        min="0"
+        inputmode="numeric"
+        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @change="
+          emit('tournamentChange', (row as HostessVisit).id, {
+            reEntry: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+          })
+        "
+      />
     </template>
 
     <template #cell-addon="{ row }">
-      {{ (row as HostessVisit).addon }}
+      <input
+        :value="(row as HostessVisit).addon"
+        type="number"
+        min="0"
+        inputmode="numeric"
+        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @change="
+          emit('tournamentChange', (row as HostessVisit).id, {
+            addon: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+          })
+        "
+      />
     </template>
 
     <template #cell-barAmount="{ row }">
-      {{ formatMoney((row as HostessVisit).barAmount) }}
+      <input
+        :value="(row as HostessVisit).barAmount"
+        type="number"
+        min="0"
+        inputmode="decimal"
+        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-medium text-slate-800 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @change="
+          emit('bartenderChange', (row as HostessVisit).id, {
+            amount: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+          })
+        "
+      />
     </template>
 
     <template #cell-dartsAmount="{ row }">
@@ -279,7 +320,18 @@ function formatMoney(value: number) {
     </template>
 
     <template #cell-paidAmount="{ row }">
-      {{ formatMoney((row as HostessVisit).paidAmount) }}
+      <input
+        :value="(row as HostessVisit).paidAmount"
+        type="number"
+        min="0"
+        inputmode="decimal"
+        class="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-950 transition outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+        @change="
+          emit('paymentChange', (row as HostessVisit).id, {
+            paidAmount: Math.max(0, Number(($event.target as HTMLInputElement).value) || 0),
+          })
+        "
+      />
     </template>
 
     <template #cell-isClosed="{ row }">

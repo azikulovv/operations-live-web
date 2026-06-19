@@ -2,6 +2,11 @@
 import type { HostessVisit } from '~/components/today/HostessVisitsTable.vue'
 import HostessVisitsTable from '~/components/today/HostessVisitsTable.vue'
 import type { EventParticipant, UpdateEventParticipantPayload } from '~/types/event'
+import type {
+  UpdateBartenderSaleDto,
+  UpdatePaymentDto,
+  UpdateTournamentDto,
+} from '~/types/operations'
 
 definePageMeta({
   middleware: 'auth',
@@ -11,7 +16,16 @@ definePageMeta({
 const route = useRoute()
 
 const eventId = computed(() => String(route.params.eventId))
-const { rows, pending, error, fetchList, updateParticipant } = useEventParticipants(eventId)
+const {
+  rows,
+  pending,
+  error,
+  fetchList,
+  updateParticipant,
+  updateTournament,
+  updateBartenderSale,
+  updatePayment,
+} = useEventParticipants(eventId)
 
 useHead({
   title: computed(() => `${eventId.value} · Сегодня | Operations Live`),
@@ -134,6 +148,26 @@ async function onChange(participantId: string, payload: UpdateEventParticipantPa
     }
   }
 }
+
+async function saveRelatedChange(action: () => Promise<void>) {
+  try {
+    await action()
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+function onTournamentChange(participantId: string, payload: UpdateTournamentDto) {
+  return saveRelatedChange(() => updateTournament(participantId, payload))
+}
+
+function onBartenderChange(participantId: string, payload: UpdateBartenderSaleDto) {
+  return saveRelatedChange(() => updateBartenderSale(participantId, payload))
+}
+
+function onPaymentChange(participantId: string, payload: UpdatePaymentDto) {
+  return saveRelatedChange(() => updatePayment(participantId, payload))
+}
 </script>
 
 <template>
@@ -183,7 +217,14 @@ async function onChange(participantId: string, payload: UpdateEventParticipantPa
         </button>
       </div>
 
-      <HostessVisitsTable v-else :visits="filteredVisits" @change="onChange" />
+      <HostessVisitsTable
+        v-else
+        :visits="filteredVisits"
+        @change="onChange"
+        @tournament-change="onTournamentChange"
+        @bartender-change="onBartenderChange"
+        @payment-change="onPaymentChange"
+      />
     </UiCard>
   </div>
 </template>
