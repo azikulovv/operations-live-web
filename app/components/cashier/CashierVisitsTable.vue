@@ -18,13 +18,25 @@ export type CashierVisit = {
   comment: string
 }
 
-defineProps<{
+const props = defineProps<{
   visits: CashierVisit[]
 }>()
 
 const emit = defineEmits<{
   change: [participantId: string, payload: UpdatePaymentDto]
 }>()
+
+const totals = computed(() => {
+  return props.visits.reduce(
+    (result, visit) => {
+      result.payableAmount += visit.payableAmount
+      result.paidAmount += visit.paidAmount
+
+      return result
+    },
+    { payableAmount: 0, paidAmount: 0 },
+  )
+})
 
 const columns: DataTableColumn[] = [
   {
@@ -135,7 +147,10 @@ function getFiniteNumber(value: number) {
     :rows="visits"
     row-key="id"
     min-width="1160px"
+    max-height="calc(100vh - 260px)"
     empty-text="Записи не найдены"
+    show-footer
+    sticky-header
   >
     <template #cell-badge="{ row }">
       <span
@@ -245,6 +260,18 @@ function getFiniteNumber(value: number) {
           })
         "
       />
+    </template>
+
+    <template #footer-discountAmount>
+      <span class="text-slate-600">Итого</span>
+    </template>
+
+    <template #footer-payableAmount>
+      {{ formatMoney(totals.payableAmount) }}
+    </template>
+
+    <template #footer-paidAmount>
+      {{ formatMoney(totals.paidAmount) }}
     </template>
   </UiDataTable>
 </template>

@@ -18,12 +18,18 @@ const props = withDefaults(
     rows: DataTableRow[]
     rowKey?: string
     minWidth?: string
+    maxHeight?: string
     emptyText?: string
+    showFooter?: boolean
+    stickyHeader?: boolean
   }>(),
   {
     rowKey: 'id',
     minWidth: '1000px',
+    maxHeight: undefined,
     emptyText: 'Данные не найдены',
+    showFooter: false,
+    stickyHeader: false,
   },
 )
 
@@ -42,15 +48,19 @@ function getAlignClass(align: DataTableColumn['align']) {
 }
 
 function getStickyHeaderClass(column: DataTableColumn) {
-  if (!column.sticky) return ''
+  if (!column.sticky && !props.stickyHeader) return ''
 
-  return 'sticky z-20 bg-slate-50'
+  return column.sticky ? 'sticky z-30 bg-slate-50' : 'sticky z-20 bg-slate-50'
 }
 
 function getStickyCellClass(column: DataTableColumn) {
   if (!column.sticky) return ''
 
   return 'sticky z-10 bg-white group-hover:bg-slate-50'
+}
+
+function getStickyFooterClass(column: DataTableColumn) {
+  return column.sticky ? 'sticky bottom-0 z-30 bg-slate-50' : 'sticky bottom-0 z-20 bg-slate-50'
 }
 
 function getStickyStyle(column: DataTableColumn) {
@@ -64,7 +74,7 @@ function getStickyStyle(column: DataTableColumn) {
 
 <template>
   <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-    <div class="overflow-x-auto">
+    <div class="overflow-auto" :style="maxHeight ? { maxHeight } : undefined">
       <table class="w-full border-collapse text-left text-xs" :style="{ minWidth }">
         <thead>
           <tr class="border-b border-slate-200 bg-slate-50 text-[11px] text-slate-500">
@@ -79,6 +89,7 @@ function getStickyStyle(column: DataTableColumn) {
               ]"
               :style="{
                 width: column.width,
+                top: stickyHeader ? '0' : undefined,
                 ...getStickyStyle(column),
               }"
             >
@@ -120,6 +131,27 @@ function getStickyStyle(column: DataTableColumn) {
             </td>
           </tr>
         </tbody>
+
+        <tfoot v-if="showFooter">
+          <tr class="border-t border-slate-200 text-slate-950 shadow-[0_-4px_12px_rgba(15,23,42,0.06)]">
+            <td
+              v-for="column in columns"
+              :key="column.key"
+              class="px-3 py-3 font-semibold"
+              :class="[
+                getAlignClass(column.align),
+                getStickyFooterClass(column),
+                column.cellClass,
+              ]"
+              :style="{
+                width: column.width,
+                ...getStickyStyle(column),
+              }"
+            >
+              <slot :name="`footer-${column.key}`" :column="column" />
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
