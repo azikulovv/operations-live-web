@@ -129,6 +129,7 @@ export type FinalTableRow = {
   externalParticipantId: string
   externalUserId: string
   seat: number | null
+  email: string
   badge: string | number | null
   nickname: string | null
   stack: number

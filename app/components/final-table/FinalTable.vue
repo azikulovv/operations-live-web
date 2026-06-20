@@ -6,6 +6,7 @@ import EditableCellInput from '../ui/EditableCellInput.vue'
 export type FinalTablePlayerRow = {
   id: string
   participantId: string
+  email: string
   seat: number | null
   badge: string | number | null
   nickname: string | null
@@ -75,7 +76,9 @@ function onStackChange(row: FinalTablePlayerRow, value: string | number) {
     </template>
 
     <template #cell-nickname="{ row }">
-      <span class="text-slate-700">{{ (row as FinalTablePlayerRow).nickname ?? '—' }}</span>
+      <span class="text-slate-700">{{
+        (row as FinalTablePlayerRow).nickname ?? (row as FinalTablePlayerRow).email ?? '—'
+      }}</span>
     </template>
 
     <template #cell-seat="{ row }">
