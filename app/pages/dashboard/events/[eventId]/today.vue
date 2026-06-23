@@ -61,40 +61,65 @@ function getParticipantStatus(participant: EventParticipant): HostessVisit['stat
   return participant.status === 'PARTICIPANT' ? 'registered' : 'in_tournament'
 }
 
+function getPromotionDiscountAmount(
+  initialDepositAmount: number,
+  promotionDiscountPercent: number,
+) {
+  return Math.floor(initialDepositAmount * (promotionDiscountPercent / 100))
+}
+
+function getTournamentTotalAmount(participant: EventParticipant) {
+  const initialDepositAmount = participant.initialDepositAmount ?? 0
+  const discountAmount = participant.payment?.discountAmount ?? 0
+  const promotionDiscountPercent =
+    participant.promotion?.promotionType === 'DEALER' ? participant.promotion.discountPercent : 0
+  const promotionDiscountAmount = getPromotionDiscountAmount(
+    initialDepositAmount,
+    promotionDiscountPercent,
+  )
+
+  return Math.max(initialDepositAmount - discountAmount - promotionDiscountAmount, 0)
+}
+
 const visits = computed<HostessVisit[]>(() => {
-  return rows.value.map((participant) => ({
-    id: participant.id,
-    badge: participant.badge ?? '',
-    nickname:
-      participant.userName ||
-      participant.user?.username ||
-      participant.user?.name ||
-      participant.userEmail ||
-      participant.user?.email ||
-      '—',
-    email: participant.userEmail ?? participant.user?.email ?? '',
-    phone: participant.userPhone ?? participant.user?.phone ?? '',
-    registeredAt: formatDateTime(participant.registeredAt ?? participant.createdAt),
-    tournament: eventTitle.value,
-    source: 'app',
-    status: getParticipantStatus(participant),
-    arrived: participant.arrived,
-    isArrivalUpdating: Boolean(arrivalPending.value[participant.id]),
-    arrivalError: arrivalErrors.value[participant.id] ?? null,
-    tableNumber: participant.tableNumber,
-    seatNumber: participant.seatNumber,
-    reEntry: participant.tournament?.reEntry ?? 0,
-    addon: participant.tournament?.addon ?? 0,
-    barAmount: participant.bartenderSale?.amount ?? participant.payment?.bar ?? 0,
-    dartsAmount: participant.payment?.games ?? 0,
-    totalAmount:
-      (participant.payment?.accruedAmount ?? participant.payment?.tournament ?? 0) +
-      (participant.bartenderSale?.amount ?? participant.payment?.bar ?? 0) +
-      (participant.payment?.games ?? 0),
-    paidAmount: participant.payment?.paidAmount ?? participant.payment?.paid ?? 0,
-    isClosed: Boolean(participant.debt?.closed ?? participant.closed),
-    debtComment: participant.debt?.comment ?? '',
-  }))
+  return rows.value.map((participant) => {
+    const initialDepositAmount = participant.initialDepositAmount ?? 0
+    const tournamentTotalAmount = getTournamentTotalAmount(participant)
+    const barAmount = participant.bartenderSale?.amount ?? participant.payment?.bar ?? 0
+    const dartsAmount = participant.payment?.games ?? 0
+
+    return {
+      id: participant.id,
+      badge: participant.badge ?? '',
+      nickname:
+        participant.userName ||
+        participant.user?.username ||
+        participant.user?.name ||
+        participant.userEmail ||
+        participant.user?.email ||
+        '—',
+      email: participant.userEmail ?? participant.user?.email ?? '',
+      phone: participant.userPhone ?? participant.user?.phone ?? '',
+      registeredAt: formatDateTime(participant.registeredAt ?? participant.createdAt),
+      tournament: eventTitle.value,
+      source: 'app',
+      status: getParticipantStatus(participant),
+      arrived: participant.arrived,
+      isArrivalUpdating: Boolean(arrivalPending.value[participant.id]),
+      arrivalError: arrivalErrors.value[participant.id] ?? null,
+      tableNumber: participant.tableNumber,
+      seatNumber: participant.seatNumber,
+      initialDepositAmount,
+      reEntry: participant.tournament?.reEntry ?? 0,
+      addon: participant.tournament?.addon ?? 0,
+      barAmount,
+      dartsAmount,
+      totalAmount: tournamentTotalAmount + barAmount + dartsAmount,
+      paidAmount: participant.payment?.paidAmount ?? participant.payment?.paid ?? 0,
+      isClosed: Boolean(participant.debt?.closed ?? participant.closed),
+      debtComment: participant.debt?.comment ?? '',
+    }
+  })
 })
 
 const filteredVisits = computed(() => {

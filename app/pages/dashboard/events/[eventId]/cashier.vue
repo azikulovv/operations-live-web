@@ -53,12 +53,12 @@ function getPlayerName(payment: PaymentRow) {
 
 const visits = computed<CashierVisit[]>(() => {
   return payments.value.map((payment) => {
-    const totalAmount = payment.payment?.accruedAmount ?? 0
+    const initialDepositAmount = payment.initialDepositAmount ?? 0
+    const discountAmount = payment.payment?.discountAmount ?? 0
+    const barAmount = payment.payment?.barAmount ?? 0
+    const payableAmount = payment.payment?.totalToPayAmount ?? payment.payment?.toPayAmount ?? 0
     const paidAmount = payment.payment?.paidAmount ?? 0
     const comment = payment.payment?.comment ?? ''
-    const discountPercent = payment.promotion?.discountPercent ?? 0
-    const discountAmount = totalAmount * (discountPercent / 100)
-    const payableAmount = Math.max(totalAmount - discountAmount, 0)
 
     return {
       id: payment.payment?.id ?? payment.participantId,
@@ -66,9 +66,12 @@ const visits = computed<CashierVisit[]>(() => {
       badge: payment.user.badge ?? payment.position ?? 0,
       nickname: getPlayerName(payment),
       tournament: eventTitle.value,
-      totalAmount,
-      discountAmount: payment.promotion?.discountPercent ?? 0,
-      payableAmount: payableAmount,
+      initialDepositAmount,
+      discountAmount,
+      promotionType: payment.promotion?.promotionType ?? null,
+      promotionDiscountPercent: payment.promotion?.discountPercent ?? 0,
+      barAmount,
+      payableAmount,
       paidAmount,
       paymentStatus: mapPaymentStatus(payment.payment?.status),
       comment,

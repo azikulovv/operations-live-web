@@ -64,6 +64,7 @@ export type EventItem = {
   startsAt: string
   endsAt: string | null
   participantLimit: number | null
+  initialDepositAmount: number
   seatsPerTable?: number | null
   tableCount?: number | null
   status: EventStatus
@@ -102,6 +103,7 @@ export interface EventParticipant {
   position: number | null
   badge?: string | null
   userBadge?: number | null
+  initialDepositAmount?: number
   tableNumber: number | null
   seatNumber: number | null
   userName?: string | null
@@ -149,6 +151,7 @@ export interface EventParticipantPayment {
   tournament?: number
   accruedAmount?: number
   discountAmount?: number
+  toPayAmount?: number
   bar?: number
   barComment?: string | null
   games?: number
@@ -216,6 +219,8 @@ export type EventPaymentDetails = {
   accruedAmount: number
   discountAmount: number
   toPayAmount: number
+  barAmount: number
+  totalToPayAmount: number
   paidAmount: number
   status: EventPaymentStatus | string
   comment: string | null
@@ -230,6 +235,7 @@ export type EventPayment = {
   tableNumber: number | null
   seatNumber: number | null
   position: number | null
+  initialDepositAmount: number
   user: EventPaymentUser
   payment: EventPaymentDetails | null
   promotion: EventPromotionDetails | null

@@ -16,6 +16,7 @@ export type OperationParticipantRow = {
   tableNumber: number | null
   seatNumber: number | null
   position: number | null
+  initialDepositAmount: number
   user: OperationUserInfo
 }
 
@@ -38,6 +39,8 @@ export type PaymentRow = OperationParticipantRow & {
         accruedAmount: number
         discountAmount: number
         toPayAmount: number
+        barAmount: number
+        totalToPayAmount: number
         paidAmount: number
         status: PaymentStatus | string
         comment: string | null
@@ -45,6 +48,7 @@ export type PaymentRow = OperationParticipantRow & {
     | null
   promotion:
     | (NullableModuleRecord & {
+        promotionType: string | null
         discountPercent: number
       })
     | null

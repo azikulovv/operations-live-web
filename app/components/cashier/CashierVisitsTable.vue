@@ -10,8 +10,11 @@ export type CashierVisit = {
   badge: number | string
   nickname: string
   tournament: string
-  totalAmount: number
+  initialDepositAmount: number
   discountAmount: number
+  promotionType: string | null
+  promotionDiscountPercent: number
+  barAmount: number
   payableAmount: number
   paidAmount: number
   paymentStatus: PaymentStatus
@@ -29,12 +32,14 @@ const emit = defineEmits<{
 const totals = computed(() => {
   return props.visits.reduce(
     (result, visit) => {
+      result.discountAmount += visit.discountAmount
+      result.barAmount += visit.barAmount
       result.payableAmount += visit.payableAmount
       result.paidAmount += visit.paidAmount
 
       return result
     },
-    { payableAmount: 0, paidAmount: 0 },
+    { discountAmount: 0, barAmount: 0, payableAmount: 0, paidAmount: 0 },
   )
 })
 
@@ -59,17 +64,24 @@ const columns: DataTableColumn[] = [
     width: '160px',
   },
   {
-    key: 'totalAmount',
-    label: 'Начислено',
+    key: 'initialDepositAmount',
+    label: 'Перв. взнос',
     align: 'right',
     width: '120px',
     cellClass: 'bg-emerald-50/50 font-medium tabular-nums text-slate-800',
   },
   {
     key: 'discountAmount',
-    label: 'Промо / скидка',
+    label: 'Скидка',
     align: 'right',
-    width: '130px',
+    width: '120px',
+    cellClass: 'tabular-nums text-slate-600',
+  },
+  {
+    key: 'barAmount',
+    label: 'Бар',
+    align: 'right',
+    width: '100px',
     cellClass: 'tabular-nums text-slate-600',
   },
   {
@@ -130,14 +142,34 @@ function getApiPaymentStatus(payableAmount: number, paidAmount: number): ApiPaym
   return 'PARTIALLY_PAID'
 }
 
-function getPayableAmount(totalAmount: number, discountPercent: number) {
-  const discountAmount = totalAmount * (discountPercent / 100)
+function getPromotionDiscountPercent(visit: CashierVisit) {
+  return visit.promotionType === 'DEALER' ? visit.promotionDiscountPercent : 0
+}
 
-  return Math.max(totalAmount - discountAmount, 0)
+function getPromotionDiscountAmount(visit: CashierVisit, initialDepositAmount: number) {
+  return Math.floor(initialDepositAmount * (getPromotionDiscountPercent(visit) / 100))
+}
+
+function getPayableAmount(
+  visit: CashierVisit,
+  initialDepositAmount: number,
+  discountAmount: number,
+  barAmount: number,
+) {
+  const tournamentToPayAmount = Math.max(
+    initialDepositAmount - discountAmount - getPromotionDiscountAmount(visit, initialDepositAmount),
+    0,
+  )
+
+  return tournamentToPayAmount + barAmount
 }
 
 function getFiniteNumber(value: number) {
   return Number.isFinite(value) ? value : 0
+}
+
+function getNonNegativeNumber(value: number) {
+  return Math.max(getFiniteNumber(value), 0)
 }
 </script>
 
@@ -146,7 +178,7 @@ function getFiniteNumber(value: number) {
     :columns="columns"
     :rows="visits"
     row-key="id"
-    min-width="1160px"
+    min-width="1280px"
     max-height="calc(100vh - 260px)"
     empty-text="Записи не найдены"
     show-footer
@@ -172,9 +204,13 @@ function getFiniteNumber(value: number) {
       </div>
     </template>
 
-    <template #cell-totalAmount="{ row }">
+    <template #cell-initialDepositAmount="{ row }">
+      {{ formatMoney((row as CashierVisit).initialDepositAmount) }}
+    </template>
+
+    <template #cell-discountAmount="{ row }">
       <EditableCellInput
-        :model-value="(row as CashierVisit).totalAmount"
+        :model-value="(row as CashierVisit).discountAmount"
         type="number"
         inputmode="decimal"
         min="0"
@@ -184,14 +220,16 @@ function getFiniteNumber(value: number) {
             'change',
             (row as CashierVisit).participantId,
             (() => {
-              const accruedAmount = getFiniteNumber(Number($event))
+              const discountAmount = getNonNegativeNumber(Number($event))
               const toPayAmount = getPayableAmount(
-                accruedAmount,
-                (row as CashierVisit).discountAmount,
+                row as CashierVisit,
+                (row as CashierVisit).initialDepositAmount,
+                discountAmount,
+                (row as CashierVisit).barAmount,
               )
 
               return {
-                accruedAmount,
+                discountAmount,
                 toPayAmount,
                 status: getApiPaymentStatus(toPayAmount, (row as CashierVisit).paidAmount),
               }
@@ -201,14 +239,8 @@ function getFiniteNumber(value: number) {
       />
     </template>
 
-    <template #cell-discountAmount="{ row }">
-      <span
-        :class="
-          (row as CashierVisit).discountAmount > 0 ? 'font-medium text-amber-700' : 'text-slate-400'
-        "
-      >
-        {{ formatMoney((row as CashierVisit).discountAmount) }}
-      </span>
+    <template #cell-barAmount="{ row }">
+      {{ formatMoney((row as CashierVisit).barAmount) }}
     </template>
 
     <template #cell-payableAmount="{ row }">
@@ -227,7 +259,7 @@ function getFiniteNumber(value: number) {
             'change',
             (row as CashierVisit).participantId,
             (() => {
-              const paidAmount = getFiniteNumber(Number($event))
+              const paidAmount = getNonNegativeNumber(Number($event))
 
               return {
                 paidAmount,
@@ -262,8 +294,16 @@ function getFiniteNumber(value: number) {
       />
     </template>
 
-    <template #footer-discountAmount>
+    <template #footer-tournament>
       <span class="text-slate-600">Итого</span>
+    </template>
+
+    <template #footer-discountAmount>
+      {{ formatMoney(totals.discountAmount) }}
+    </template>
+
+    <template #footer-barAmount>
+      {{ formatMoney(totals.barAmount) }}
     </template>
 
     <template #footer-payableAmount>

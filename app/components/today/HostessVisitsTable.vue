@@ -26,6 +26,7 @@ export type HostessVisit = {
   arrivalError: string | null
   tableNumber: number | null
   seatNumber: number | null
+  initialDepositAmount: number
   reEntry: number
   addon: number
   barAmount: number
@@ -98,6 +99,13 @@ const columns: DataTableColumn[] = [
     label: 'Место',
     align: 'center',
     width: '80px',
+  },
+  {
+    key: 'initialDepositAmount',
+    label: 'Перв. взнос',
+    align: 'right',
+    width: '120px',
+    cellClass: 'bg-emerald-50/50 tabular-nums text-slate-700',
   },
   {
     key: 'reEntry',
@@ -266,6 +274,10 @@ function formatMoney(value: number) {
 
     <template #cell-seatNumber="{ row }">
       {{ (row as HostessVisit).seatNumber ?? '—' }}
+    </template>
+
+    <template #cell-initialDepositAmount="{ row }">
+      {{ formatMoney((row as HostessVisit).initialDepositAmount) }}
     </template>
 
     <template #cell-reEntry="{ row }">
