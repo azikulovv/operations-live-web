@@ -112,7 +112,7 @@ function openEvent(event: EventItem) {
         <h2 class="mt-1 text-xl font-semibold tracking-tight text-slate-950">События</h2>
 
         <p class="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Выберите событие, чтобы открыть рабочие экраны хостес, кассы и promotions.
+          Выберите событие, чтобы открыть рабочие экраны админа, кассы и promotions.
         </p>
       </div>
     </div>

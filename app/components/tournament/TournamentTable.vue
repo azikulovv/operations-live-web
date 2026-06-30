@@ -34,7 +34,7 @@ const columns: DataTableColumn[] = [
   { key: 'updatedAt', label: 'Обновлен', width: '160px' },
 ]
 
-const statusOptions = ['ACTIVE', 'BUSTED', 'FINISHED']
+const statusOptions = ['ACTIVE', 'FINISHED']
 </script>
 
 <template>

@@ -117,6 +117,7 @@ const visits = computed<HostessVisit[]>(() => {
       totalAmount: tournamentTotalAmount + barAmount + dartsAmount,
       paidAmount: participant.payment?.paidAmount ?? participant.payment?.paid ?? 0,
       isClosed: Boolean(participant.debt?.closed ?? participant.closed),
+      knockouts: participant.tournament?.knockouts ?? 0,
       debtComment: participant.debt?.comment ?? '',
     }
   })
@@ -201,7 +202,7 @@ function onDebtChange(participantId: string, payload: UpdateDebtDto) {
   <div class="mx-auto max-w-7xl">
     <SharedPageHeader
       class="mb-4"
-      title="Хостес"
+      title="Админ"
       description="Регистрации, бейджи, статусы, начисления и закрытие визита."
       :breadcrumbs="[
         {

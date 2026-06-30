@@ -12,18 +12,34 @@ const search = ref('')
 
 const { rows, pending, error, fetchList, updateTournament } = useTournament(eventId)
 
+function isFinishedStatus(status: string | null | undefined) {
+  return status?.toUpperCase() === 'FINISHED'
+}
+
 const tableRows = computed(() =>
-  rows.value.map((row) => ({
-    participantId: row.participantId,
-    badge: row.user.badge,
-    nickname: row.user.name || row.user.email,
-    reEntry: row.tournament.reEntry,
-    addon: row.tournament.addon,
-    knockouts: row.tournament.knockouts,
-    bustoutOrder: row.tournament.bustoutOrder,
-    status: row.tournament.status,
-    updatedAt: row.tournament.updatedAt,
-  })),
+  rows.value
+    .map((row, index) => ({
+      index,
+      player: {
+        participantId: row.participantId,
+        badge: row.user.badge,
+        nickname: row.user.name || row.user.email,
+        reEntry: row.tournament.reEntry,
+        addon: row.tournament.addon,
+        knockouts: row.tournament.knockouts,
+        bustoutOrder: row.tournament.bustoutOrder,
+        status: row.tournament.status,
+        updatedAt: row.tournament.updatedAt,
+      },
+    }))
+    .sort((first, second) => {
+      const finishedOrder =
+        Number(isFinishedStatus(first.player.status)) -
+        Number(isFinishedStatus(second.player.status))
+
+      return finishedOrder || first.index - second.index
+    })
+    .map(({ player }) => player),
 )
 
 const filteredRows = computed(() => {

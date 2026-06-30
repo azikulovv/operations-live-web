@@ -34,6 +34,7 @@ export type HostessVisit = {
   totalAmount: number
   paidAmount: number
   isClosed: boolean
+  knockouts: number
   debtComment: string
 }
 
@@ -149,6 +150,12 @@ const columns: DataTableColumn[] = [
     key: 'isClosed',
     label: 'Закрыт',
     width: '90px',
+  },
+  {
+    key: 'knockouts',
+    label: 'Knockouts',
+    align: 'right',
+    width: '110px',
   },
   {
     key: 'debtComment',
@@ -359,6 +366,21 @@ function formatMoney(value: number) {
       >
         {{ (row as HostessVisit).isClosed ? 'Да' : 'Нет' }}
       </span>
+    </template>
+
+    <template #cell-knockouts="{ row }">
+      <EditableCellInput
+        :model-value="(row as HostessVisit).knockouts"
+        type="number"
+        inputmode="numeric"
+        min="0"
+        class="w-20 text-right"
+        @update:model-value="
+          emit('tournamentChange', (row as HostessVisit).id, {
+            knockouts: Math.max(0, Number($event) || 0),
+          })
+        "
+      />
     </template>
 
     <template #cell-debtComment="{ row }">
